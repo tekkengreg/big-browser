@@ -1,0 +1,78 @@
+app-id: com.notion.standalone
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: notion-standalone
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --device=dri
+
+build-options:
+  env:
+    NPM_CONFIG_LOGLEVEL: info
+
+modules:
+  - name: nodejs
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app
+      - cp -r * /app/
+    cleanup:
+      - /include
+      - /share/man
+      - /share/doc
+      - "*.a"
+    sources:
+      - type: archive
+        url: https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
+        sha256: 822780369d0ea309e7d218e41debbd1a03f8cdf354ebf8a4420e89f39cc2e612
+
+  - name: notion-standalone
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - npm install --omit=dev
+      - npm install electron@35.5.1
+      - mkdir -p /app/bin
+      - cp -r src /app/bin/
+      - cp package.json /app/bin/
+      - cp -r node_modules /app/bin/
+      # Install icon
+      - mkdir -p /app/share/icons/hicolor/512x512/apps
+      - wget -O /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png "https://www.notion.so/images/logo-ios.png" || curl -o /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png "https://www.notion.so/images/logo-ios.png"
+      # - convert /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png -resize 512x512 /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png
+      # Create desktop file
+      - mkdir -p /app/share/applications
+      - |
+        cat > /app/share/applications/com.notion.standalone.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=Notion
+        Comment=All-in-one workspace for notes, tasks, wikis, and databases
+        Exec=notion-standalone
+        Icon=com.notion.standalone
+        Categories=Office;TextEditor;
+        Keywords=notes;tasks;productivity;wiki;database;
+        StartupNotify=true
+        StartupWMClass=notion-standalone
+        MimeType=text/plain;
+        EOF
+      # Create launcher script
+      - |
+        cat > /app/bin/notion-standalone << 'EOF'
+        #!/bin/bash
+        cd /app/bin
+        exec node_modules/.bin/electron --no-sandbox src/main.js "$@"
+        EOF
+      - chmod +x /app/bin/notion-standalone
+    sources:
+      - type: dir
+        path: . 
