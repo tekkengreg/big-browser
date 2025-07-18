@@ -1,0 +1,98 @@
+app-id: com.tekkengreg.bigbrowser.sketchup
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: sketchup
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --device=dri
+
+build-options:
+  env:
+    NPM_CONFIG_LOGLEVEL: info
+
+modules:
+  - name: imagemagick
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://imagemagick.org/archive/releases/ImageMagick-7.1.1-15.tar.xz
+        sha256: c8589ea233f678b0474daaba19a55ce783b52b25495fb5ba93ac1d377f65bb2f
+
+  - name: nodejs
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app
+      - cp -r * /app/
+    cleanup:
+      - /include
+      - /share/man
+      - /share/doc
+      - "*.a"
+    sources:
+      - type: archive
+        url: https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
+        sha256: 822780369d0ea309e7d218e41debbd1a03f8cdf354ebf8a4420e89f39cc2e612
+
+  - name: sketchup
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+      env:
+        APP_URL: https://app.sketchup.com/app
+    build-commands:
+      - npm install --omit=dev
+      - npm install electron@35.5.1
+      - mkdir -p /app/bin
+      - cp -r src /app/bin/
+      - cp package.json /app/bin/
+      - cp -r node_modules /app/bin/
+      # Install SketchUp icon - simplified approach
+      - mkdir -p /app/share/icons/hicolor/512x512/apps
+      - mkdir -p /app/share/icons/hicolor/256x256/apps
+      - mkdir -p /app/share/icons/hicolor/128x128/apps
+      - mkdir -p /app/share/icons/hicolor/64x64/apps
+      - mkdir -p /app/share/icons/hicolor/48x48/apps
+      # Download SketchUp favicon in high resolution
+      # - wget -O /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png "https://www.google.com/favicon.ico" || curl -o /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png "https://www.google.com/favicon.ico"
+      # Try alternative SketchUp logo if favicon fails
+      - test -f /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png || wget -O /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png "https://cdn.brandfetch.io/id6JY24Jff/w/800/h/869/theme/dark/symbol.png?c=1bxid64Mup7aczewSAYMX&t=1668081406242"
+      # Copy to other sizes (force square icons with transparent background)
+      - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png -resize 512x512 -gravity center -background transparent -extent 512x512 /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png
+      - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png -resize 256x256 -gravity center -background transparent -extent 256x256 /app/share/icons/hicolor/256x256/apps/com.tekkengreg.bigbrowser.sketchup.png
+      - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png -resize 128x128 -gravity center -background transparent -extent 128x128 /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.sketchup.png
+      - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png -resize 64x64 -gravity center -background transparent -extent 64x64 /app/share/icons/hicolor/64x64/apps/com.tekkengreg.bigbrowser.sketchup.png
+      - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.sketchup.png -resize 48x48 -gravity center -background transparent -extent 48x48 /app/share/icons/hicolor/48x48/apps/com.tekkengreg.bigbrowser.sketchup.png
+      # Create desktop file with CONSISTENT naming
+      - mkdir -p /app/share/applications
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.sketchup.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SketchUp
+        Comment=SketchUp
+        Exec=sketchup
+        Icon=com.tekkengreg.bigbrowser.sketchup
+        Categories=Graphics;3DGraphics;
+        Keywords=3d;3d
+        MimeType=text/html;text/xml;application/xhtml+xml;
+        EOF
+      # Create launcher script
+      - |
+        cat > /app/bin/sketchup << 'EOF'
+        #!/bin/bash
+        cd /app/bin
+        export APP_URL="https://app.sketchup.com/app"
+        exec node_modules/.bin/electron --no-sandbox src/main.js "$@"
+        EOF
+      - chmod +x /app/bin/sketchup
+    sources:
+      - type: dir
+        path: . 

@@ -1,8 +1,8 @@
-app-id: com.notion.standalone
+app-id: com.tekkengreg.bigbrowser.notion
 runtime: org.freedesktop.Platform
 runtime-version: '23.08'
 sdk: org.freedesktop.Sdk
-command: notion-standalone
+command: notion
 
 finish-args:
   - --share=ipc
@@ -33,7 +33,7 @@ modules:
         url: https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
         sha256: 822780369d0ea309e7d218e41debbd1a03f8cdf354ebf8a4420e89f39cc2e612
 
-  - name: notion-standalone
+  - name: notion
     buildsystem: simple
     build-options:
       build-args:
@@ -47,32 +47,32 @@ modules:
       - cp -r node_modules /app/bin/
       # Install icon
       - mkdir -p /app/share/icons/hicolor/512x512/apps
-      - wget -O /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png "https://www.notion.so/images/logo-ios.png" || curl -o /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png "https://www.notion.so/images/logo-ios.png"
-      # - convert /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png -resize 512x512 /app/share/icons/hicolor/512x512/apps/com.notion.standalone.png
+      - wget -O /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.notion.png "https://www.notion.so/images/logo-ios.png" || curl -o /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.notion.png "https://www.notion.so/images/logo-ios.png"
+      # - convert /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.notion.png -resize 512x512 /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.notion.png
       # Create desktop file
       - mkdir -p /app/share/applications
       - |
-        cat > /app/share/applications/com.notion.standalone.desktop << 'EOF'
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.notion.desktop << 'EOF'
         [Desktop Entry]
         Type=Application
         Name=Notion
         Comment=All-in-one workspace for notes, tasks, wikis, and databases
-        Exec=notion-standalone
-        Icon=com.notion.standalone
+        Exec=notion
+        Icon=com.tekkengreg.bigbrowser.notion
         Categories=Office;TextEditor;
         Keywords=notes;tasks;productivity;wiki;database;
         StartupNotify=true
-        StartupWMClass=notion-standalone
+        StartupWMClass=notion
         MimeType=text/plain;
         EOF
       # Create launcher script
       - |
-        cat > /app/bin/notion-standalone << 'EOF'
+        cat > /app/bin/notion << 'EOF'
         #!/bin/bash
         cd /app/bin
         exec node_modules/.bin/electron --no-sandbox src/main.js "$@"
         EOF
-      - chmod +x /app/bin/notion-standalone
+      - chmod +x /app/bin/notion
     sources:
       - type: dir
         path: . 

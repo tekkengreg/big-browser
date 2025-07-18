@@ -1,0 +1,92 @@
+app-id: com.tekkengreg.bigbrowser.google
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: google-search
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --device=dri
+
+build-options:
+  env:
+    NPM_CONFIG_LOGLEVEL: info
+
+modules:
+  - name: nodejs
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app
+      - cp -r * /app/
+    cleanup:
+      - /include
+      - /share/man
+      - /share/doc
+      - "*.a"
+    sources:
+      - type: archive
+        url: https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz
+        sha256: 822780369d0ea309e7d218e41debbd1a03f8cdf354ebf8a4420e89f39cc2e612
+
+  - name: google-search
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+      env:
+        APP_URL: https://www.google.com/search
+    build-commands:
+      - npm install --omit=dev
+      - npm install electron@35.5.1
+      - mkdir -p /app/bin
+      - cp -r src /app/bin/
+      - cp package.json /app/bin/
+      - cp -r node_modules /app/bin/
+      # Install Google icon - simplified approach
+      - mkdir -p /app/share/icons/hicolor/512x512/apps
+      - mkdir -p /app/share/icons/hicolor/256x256/apps
+      - mkdir -p /app/share/icons/hicolor/128x128/apps
+      - mkdir -p /app/share/icons/hicolor/64x64/apps
+      - mkdir -p /app/share/icons/hicolor/48x48/apps
+      # Download Google favicon in high resolution
+      # - wget -O /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png "https://www.google.com/favicon.ico" || curl -o /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png "https://www.google.com/favicon.ico"
+      # Try alternative Google logo if favicon fails
+      - test -f /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png || wget -O /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/512px-Google_%22G%22_logo.svg.png"
+      # Copy to other sizes (symlinks for consistency)
+      - cp /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png /app/share/icons/hicolor/256x256/apps/com.tekkengreg.bigbrowser.google.png 2>/dev/null || true
+      - cp /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.google.png 2>/dev/null || true
+      - cp /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png /app/share/icons/hicolor/64x64/apps/com.tekkengreg.bigbrowser.google.png 2>/dev/null || true
+      - cp /app/share/icons/hicolor/512x512/apps/com.tekkengreg.bigbrowser.google.png /app/share/icons/hicolor/48x48/apps/com.tekkengreg.bigbrowser.google.png 2>/dev/null || true
+      # Create desktop file with CONSISTENT naming
+      - mkdir -p /app/share/applications
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.google.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=Google Search
+        Comment=Search the web with Google
+        Exec=google-search
+        Icon=com.tekkengreg.bigbrowser.google
+        Categories=Network;WebBrowser;
+        Keywords=search;google;web;internet;browser;
+        StartupNotify=true
+        StartupWMClass=google-search
+        MimeType=text/html;text/xml;application/xhtml+xml;
+        EOF
+      # Create launcher script
+      - |
+        cat > /app/bin/google-search << 'EOF'
+        #!/bin/bash
+        cd /app/bin
+        export APP_URL="https://www.google.com/search"
+        exec node_modules/.bin/electron --no-sandbox src/main.js "$@"
+        EOF
+      - chmod +x /app/bin/google-search
+    sources:
+      - type: dir
+        path: . 

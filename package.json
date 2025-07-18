@@ -6,7 +6,10 @@
   "scripts": {
     "start": "electron ./src/main.js --no-sandbox",
     "build": "electron-builder",
-    "build:flatpak": "flatpak-builder --repo=repo --force-clean build-dir com.notion.standalone.yml"
+    "build:flatpak:notion": "flatpak-builder --repo=repo --force-clean build-dir com.tekkengreg.bigbrowser.notion.yml",
+    "build:flatpak:google": "flatpak-builder --repo=repo --force-clean build-dir com.tekkengreg.bigbrowser.google.yml",
+    "build:flatpak:sketchup": "flatpak-builder --repo=repo --force-clean build-dir com.tekkengreg.bigbrowser.sketchup.yml",
+    "build:flatpak:all": "pnpm build:flatpak && pnpm build:flatpak:google && pnpm build:flatpak:sketchup"
   },
   "keywords": [],
   "author": "",
