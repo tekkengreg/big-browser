@@ -6,3 +6,4 @@ local-repo
 *.flatpak
 build-dir
 repo
+manifests
