@@ -46,7 +46,7 @@
             console.log(data);
             Object.keys(data).forEach(app => {
                 const appElement = document.createElement('div');
-                appElement.innerHTML = `<a href="${data[app].url}">${data[app].displayName}</a><img src="${data[app].iconUrl}" alt="${data[app].displayName}" />`;
+                appElement.innerHTML = `<a href="${data[app].url}">${data[app].displayName}</a><img src="./icons/${data[app].appName}.png" alt="${data[app].displayName}" />`;
                 appElement.classList.add('card');
                     document.getElementById('apps').appendChild(appElement);
             });

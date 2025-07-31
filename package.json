@@ -8,14 +8,12 @@
     "build": "electron-builder",
     
     "generate-apps": "node generate-app.js all",
-    "generate-apps-offline": "node generate-app.js all-offline",
     "update-icons": "node generate-app.js update-icons",
     "add-app": "node generate-app.js add",
     "build-apps": "node generate-app.js build",
     "update-repo": "echo '📦 Mise à jour du repository...' && flatpak build-update-repo repo >/dev/null 2>&1 && echo '✅ Repository mis à jour avec succès!' && echo '📋 Applications disponibles:' && flatpak remote-ls local-repo | wc -l | xargs echo -n && echo ' applications'",
     "update-repo-verbose": "flatpak build-update-repo repo",
-    "copy-icons-to-system": "echo '🔧 Copie des icônes vers le système...' && mkdir -p ~/.local/share/icons/hicolor/{48x48,64x64,128x128,256x256,512x512}/apps && if [ -d ~/.local/share/flatpak/exports/share/icons/hicolor ]; then find ~/.local/share/flatpak/exports/share/icons/hicolor -name 'com.tekkengreg.bigbrowser.*.png' -exec cp {} ~/.local/share/icons/hicolor/512x512/apps/ \\; 2>/dev/null; find ~/.local/share/flatpak/exports/share/icons/hicolor -name 'com.tekkengreg.bigbrowser.*.png' -exec cp {} ~/.local/share/icons/hicolor/256x256/apps/ \\; 2>/dev/null; find ~/.local/share/flatpak/exports/share/icons/hicolor -name 'com.tekkengreg.bigbrowser.*.png' -exec cp {} ~/.local/share/icons/hicolor/128x128/apps/ \\; 2>/dev/null; find ~/.local/share/flatpak/exports/share/icons/hicolor -name 'com.tekkengreg.bigbrowser.*.png' -exec cp {} ~/.local/share/icons/hicolor/64x64/apps/ \\; 2>/dev/null; find ~/.local/share/flatpak/exports/share/icons/hicolor -name 'com.tekkengreg.bigbrowser.*.png' -exec cp {} ~/.local/share/icons/hicolor/48x48/apps/ \\; 2>/dev/null; fi && gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor/ && echo '✅ Icônes copiées et cache mis à jour!'",
-    "deploy": "pnpm run generate-apps && pnpm run update-repo && pnpm run copy-icons-to-system && echo '🚀 Déploiement terminé! Icônes installées dans Unity!'",
+    "deploy": "pnpm run generate-apps && pnpm run update-repo && echo '🚀 Déploiement terminé!",
     "check-updates": "echo '🔍 Vérification des mises à jour disponibles...' && echo 'Applications installées:' && flatpak list --app --user | grep tekkengreg",
     
     "build:base": "flatpak-builder --repo=repo --force-clean build-dir-base manifests/app-template-simple-offline.yml",
@@ -28,7 +26,8 @@
     "build:flatpak:all:optimized": "pnpm build:flatpak:notion && pnpm build:flatpak:google && pnpm build:flatpak:sketchup",
     "build:flatpak:full": "pnpm build:base && pnpm install:base && pnpm build:flatpak:all:optimized",
     
-    "build:flatpak:all": "pnpm build:flatpak && pnpm build:flatpak:google && pnpm build:flatpak:sketchup"
+    "build:flatpak:all": "pnpm build:flatpak && pnpm build:flatpak:google && pnpm build:flatpak:sketchup",
+    "web:page": "http-server -p 8080 web"
   },
   "keywords": [],
   "author": "",
@@ -38,7 +37,8 @@
   },
   "devDependencies": {
     "electron": "^35.5.1",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "http-server": "^14.1.1"
   },
 
   "pnpm": {
