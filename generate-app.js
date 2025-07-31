@@ -114,7 +114,7 @@ function tryFavicon(originalUrl, appName) {
 
 function generateAppManifest(appConfig) {
   const template = fs.readFileSync(
-    'manifests/app-template-simple.yml',
+    'manifests/app-template.yml',
     'utf8'
   );
 
@@ -126,7 +126,7 @@ function generateAppManifest(appConfig) {
   for (const ext of possibleExtensions) {
     const iconPath = path.join(iconsDir, `${appConfig.appName}${ext}`);
     if (fs.existsSync(iconPath)) {
-      iconSource.push(`      - type: file\n        path: ../icons-ok/${appConfig.appName}${ext}\n        dest-filename: icon${ext}`);
+      iconSource.push(`      - type: file\n        path: ../icons/${appConfig.appName}${ext}\n        dest-filename: com.tekkengreg.bigbrowser.${appConfig.appName}${ext}`);
       break; // Only use the first icon found
     }
   }

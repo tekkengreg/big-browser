@@ -1,5 +1,34 @@
 # Flatpak
 
+## les commandes pnpm
+🎯 Commandes PNPM réorganisées avec succès !
+✅ Nouvelles commandes structurées :
+📝 GÉNÉRATION :
+- `pnpm generate:manifests` - Génère tous les manifests à partir de la config
+- `pnpm generate:icons` - Met à jour toutes les icônes
+- `pnpm add:app` - Ajoute une nouvelle application
+🔨 BUILD :
+- `pnpm build:base` - Build l'application de base (Node.js + Electron)
+- `pnpm build:google` - Build Google Search uniquement
+- `pnpm build:notion` - Build Notion uniquement
+- `pnpm build:apps` - Build toutes les applications
+- `pnpm build:all` - Build complet (base + toutes les apps)
+📦 INSTALLATION & MISE À JOUR :
+- `pnpm install:base` - Installe l'application de base
+- `pnpm install:google` - Installe Google Search
+- `pnpm update:base` - Met à jour l'application de base
+- `pnpm update:google` - Met à jour Google Search
+🗂️ REPOSITORY :
+- `pnpm repo:update` - Met à jour le repository local
+- `pnpm repo:list` - Liste les apps disponibles dans le repo
+- `pnpm apps:list` - Liste les apps installées sur le système
+🚀 WORKFLOW COMPLET :
+- `pnpm deploy` - Workflow complet : génère + build + update repo
+Maintenant vous pouvez facilement utiliser les 3 commandes principales que vous vouliez :
+- `pnpm generate:manifests` → Génère les manifests pour chaque app
+- `pnpm build:base` → Build l'application de base
+- `pnpm build:google` → Build Google spécifiquement
+
 ## command pnppm
 
 ```sh

@@ -1,0 +1,53 @@
+app-id: com.tekkengreg.bigbrowser.APPNAME
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk//23.08
+command: APPNAME
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.Flatpak
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=ELECTRON_OZONE_PLATFORM_HINT=auto
+
+modules:
+  - name: APPNAME
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps
+      - |
+        cat > /app/bin/APPNAME << 'EOF'
+        #!/bin/bash
+        exec flatpak-spawn --host flatpak run com.tekkengreg.bigbrowser.Base "APP_DISPLAY_NAME" "APP_URL"
+        EOF
+      - chmod +x /app/bin/APPNAME
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.APPNAME.desktop << 'EOF'
+        [Desktop Entry]
+        Name=APP_DISPLAY_NAME
+        Comment=APP_DESCRIPTION
+        Exec=APPNAME
+        Icon=com.tekkengreg.bigbrowser.APPNAME
+        Terminal=false
+        Type=Application
+        StartupWMClass=APP_DISPLAY_NAME
+        Categories=APP_CATEGORIES
+        Keywords=APP_KEYWORDS
+        StartupNotify=true
+        EOF
+      - cp -f com.tekkengreg.bigbrowser.APPNAME.* /app/share/icons/hicolor/128x128/apps/ 2>/dev/null || true
+    sources:
+      # ICON_SOURCE will be replaced by the generator 

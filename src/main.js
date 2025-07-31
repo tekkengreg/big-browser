@@ -26,9 +26,18 @@ function createWindow() {
     }
   });
 
-  // Get the URL from the environment variable or use a default
-  const url = process.env.APP_URL || 'https://notion.so';
-  console.log('Loading URL:', url);
+  // Get the URL from command line arguments or environment variable or use a default
+  const appName = process.argv[2] || process.env.APP_NAME || 'BigBrowser';
+  const url = process.argv[3] || process.env.APP_URL || 'https://notion.so';
+  console.log('Loading app:', appName, 'at URL:', url);
+  
+  // If no specific URL provided, show help message
+  if (!process.argv[3] && !process.env.APP_URL) {
+    console.log('BigBrowser Base Application');
+    console.log('This app provides the shared components for all BigBrowser apps.');
+    console.log('Use individual BigBrowser apps like Google, Notion, SketchUp instead.');
+    return;
+  }
   
   // Load the URL
   win.loadURL(url);
@@ -56,9 +65,9 @@ function createWindow() {
   });
 
   // Ouvrir les DevTools en mode développement
-  if (!app.isPackaged) {
-    win.webContents.openDevTools();
-  }
+  // if (!app.isPackaged) {
+  //   win.webContents.openDevTools();
+  // }
 }
 
 // Gérer le démarrage de l'application

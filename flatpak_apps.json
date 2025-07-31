@@ -80,14 +80,12 @@
     "categories": "AI;Assistant;",
     "keywords": "ai;chatgpt;assistant;openai;"
   },
-  "spotify": {
-    "appName": "spotify",
-    "displayName": "Spotify",
-    "description": "Music streaming platform",
-    "url": "https://open.spotify.com",
-    "iconUrl": "https://www.scdn.co/i/_global/favicon.png",
-    "categories": "Audio;Music;",
-    "keywords": "music;audio;spotify;streaming;"
+  "deepseek": {
+    "appName": "deepseek",
+    "displayName": "DeepSeek",
+    "description": "AI assistant by DeepSeek",
+    "url": "https://deepseek.com",
+    "iconUrl": "https://deepseek.com/favicon.ico"
   },
   "netflix": {
     "appName": "netflix",
@@ -106,114 +104,6 @@
     "iconUrl": "https://static.canva.com/static/images/favicon.ico",
     "categories": "Graphics;Design;",
     "keywords": "design;canva;graphics;"
-  },
-  "airbnb": {
-    "appName": "airbnb",
-    "displayName": "Airbnb",
-    "description": "Vacation rentals and experiences",
-    "url": "https://www.airbnb.com",
-    "iconUrl": "https://images.icon-icons.com/1826/PNG/512/4202033airairbnbbnblogosocialsocialmedia-115655_115646.png",
-    "categories": "Network;Travel;",
-    "keywords": "airbnb;travel;rentals;"
-  },
-  "slack": {
-    "appName": "slack",
-    "displayName": "Slack",
-    "description": "Business communication platform",
-    "url": "https://slack.com",
-    "iconUrl": "https://images.icon-icons.com/2699/PNG/512/slack_logo_icon_170727.png",
-    "categories": "Network;Chat;",
-    "keywords": "communication;chat;slack;business;"
-  },
-  "trello": {
-    "appName": "trello",
-    "displayName": "Trello",
-    "description": "Organize tasks and projects",
-    "url": "https://trello.com",
-    "iconUrl": "https://cdn.worldvectorlogo.com/logos/trello.svg",
-    "categories": "Office;ProjectManagement;",
-    "keywords": "kanban;trello;tasks;projects;"
-  },
-  "dropbox": {
-    "appName": "dropbox",
-    "displayName": "Dropbox",
-    "description": "Cloud file storage",
-    "url": "https://dropbox.com",
-    "iconUrl": "https://cfl.dropboxstatic.com/static/images/favicon.ico",
-    "categories": "Network;FileTransfer;",
-    "keywords": "cloud;storage;files;dropbox;"
-  },
-  "onedrive": {
-    "appName": "onedrive",
-    "displayName": "OneDrive",
-    "description": "Microsoft cloud storage",
-    "url": "https://onedrive.live.com",
-    "iconUrl": "https://images.icon-icons.com/2397/PNG/512/microsoft_onedrive_drive_office_logo_icon_145729.png",
-    "categories": "Network;FileTransfer;",
-    "keywords": "microsoft;cloud;storage;onedrive;"
-  },
-  "zoom": {
-    "appName": "zoom",
-    "displayName": "Zoom",
-    "description": "Video conferencing platform",
-    "url": "https://zoom.us",
-    "iconUrl": "https://st1.zoom.us/zoom.ico",
-    "categories": "Network;Conference;",
-    "keywords": "zoom;conference;video;meeting;"
-  },
-  "discord": {
-    "appName": "discord",
-    "displayName": "Discord",
-    "description": "Voice and text chat for communities",
-    "url": "https://discord.com",
-    "iconUrl": "https://images.icon-icons.com/2108/PNG/512/discord_icon_130958.png",
-    "categories": "Network;Chat;",
-    "keywords": "chat;discord;voice;text;gaming;"
-  },
-  "whatsapp": {
-    "appName": "whatsapp",
-    "displayName": "WhatsApp",
-    "description": "Messaging app by Meta",
-    "url": "https://web.whatsapp.com",
-    "iconUrl": "https://images.icon-icons.com/840/PNG/512/Whatsapp_icon-icons.com_66931.png",
-    "categories": "Network;Chat;",
-    "keywords": "whatsapp;messaging;text;voice;"
-  },
-  "messenger": {
-    "appName": "messenger",
-    "displayName": "Messenger",
-    "description": "Meta's chat app",
-    "url": "https://www.messenger.com",
-    "iconUrl": "https://images.icon-icons.com/836/PNG/512/Facebook_Messenger_icon-icons.com_66796.png",
-    "categories": "Network;Chat;",
-    "keywords": "facebook;messenger;chat;text;"
-  },
-  "googlemaps": {
-    "appName": "googlemaps",
-    "displayName": "Google Maps",
-    "description": "Navigate and explore places",
-    "url": "https://maps.google.com",
-    "iconUrl": "https://images.icon-icons.com/2224/PNG/512/google_map_logo_icon_134443.png",
-    "categories": "Network;Maps;",
-    "keywords": "maps;navigation;google;travel;"
-  },
-  "waze": {
-    "appName": "waze",
-    "displayName": "Waze",
-    "description": "Community-based traffic and navigation",
-    "url": "https://www.waze.com",
-    "iconUrl": "https://www.waze.com/favicon.ico",
-    "categories": "Network;Maps;",
-    "keywords": "waze;maps;navigation;traffic;"
-  },
-  "telegram": {
-    "appName": "telegram",
-    "displayName": "Telegram",
-    "description": "Private messaging app",
-    "url": "https://web.telegram.org",
-    "iconUrl": "https://telegram.org/img/t_logo.svg",
-    "categories": "Network;Chat;",
-    "keywords": "telegram;chat;messaging;privacy;"
   },
   "medium": {
     "appName": "medium",
@@ -242,121 +132,13 @@
     "categories": "Video;Media;",
     "keywords": "video;tiktok;shorts;"
   },
-  "lemonde": {
-    "appName": "lemonde",
-    "displayName": "Le Monde",
-    "description": "Actualit\u00e9s fran\u00e7aises et internationales",
-    "url": "https://www.lemonde.fr",
-    "iconUrl": "https://logosandtypes.com/wp-content/uploads/2020/12/le-monde.svg",
-    "categories": "News;France;",
-    "keywords": "lemonde;actualit\u00e9;presse;france;"
-  },
-  "liberation": {
-    "appName": "liberation",
-    "displayName": "Lib\u00e9ration",
-    "description": "Journal fran\u00e7ais d\u2019actualit\u00e9 et d\u2019opinion",
-    "url": "https://www.liberation.fr",
-    "iconUrl": "https://www.liberation.fr/favicon.ico",
-    "categories": "News;France;",
-    "keywords": "liberation;actualit\u00e9;presse;france;"
-  },
-  "lefigaro": {
-    "appName": "lefigaro",
-    "displayName": "Le Figaro",
-    "description": "Actualit\u00e9, \u00e9conomie et politique",
-    "url": "https://www.lefigaro.fr",
-    "iconUrl": "https://www.lefigaro.fr/favicon.ico",
-    "categories": "News;France;",
-    "keywords": "lefigaro;actualit\u00e9;presse;france;"
-  },
-  "mediapart": {
-    "appName": "mediapart",
-    "displayName": "Mediapart",
-    "description": "Journal d'investigation ind\u00e9pendant",
-    "url": "https://www.mediapart.fr",
-    "iconUrl": "https://play-lh.googleusercontent.com/hwmgVMkvFSngmSrjtkE_1f3y74GuBh8uw-PPp077MlMItH5QSJ0TNjh--0Vg26OWc3Q=w240-h480-rw",
-    "categories": "News;France;",
-    "keywords": "mediapart;enqu\u00eate;actualit\u00e9;france;"
-  },
-  "nytimes": {
-    "appName": "nytimes",
-    "displayName": "The New York Times",
-    "description": "Breaking news and analysis from the US",
-    "url": "https://www.nytimes.com",
-    "iconUrl": "https://www.nytimes.com/favicon.ico",
-    "categories": "News;US;",
-    "keywords": "nytimes;news;usa;us;"
-  },
-  "washingtonpost": {
-    "appName": "washingtonpost",
-    "displayName": "The Washington Post",
-    "description": "Politics, world and national news",
-    "url": "https://www.washingtonpost.com",
-    "iconUrl": "https://images.icon-icons.com/2699/PNG/512/washingtonpost_logo_icon_170226.png",
-    "categories": "News;US;",
-    "keywords": "washingtonpost;news;usa;politics;"
-  },
-  "latimes": {
-    "appName": "latimes",
-    "displayName": "Los Angeles Times",
-    "description": "News from Southern California and beyond",
-    "url": "https://www.latimes.com",
-    "iconUrl": "https://www.latimes.com/favicon.ico",
-    "categories": "News;US;",
-    "keywords": "latimes;news;usa;california;"
-  },
-  "wsj": {
-    "appName": "wsj",
-    "displayName": "The Wall Street Journal",
-    "description": "Business and finance news",
-    "url": "https://www.wsj.com",
-    "iconUrl": "https://www.wsj.com/favicon.ico",
-    "categories": "News;US;",
-    "keywords": "wsj;business;finance;usa;"
-  },
-  "guardian": {
-    "appName": "guardian",
-    "displayName": "The Guardian",
-    "description": "UK and international news",
-    "url": "https://www.theguardian.com",
-    "iconUrl": "https://www.theguardian.com/favicon.ico",
-    "categories": "News;UK;",
-    "keywords": "guardian;news;uk;international;"
-  },
-  "bbcnews": {
-    "appName": "bbcnews",
-    "displayName": "BBC News",
-    "description": "UK and world news",
-    "url": "https://www.bbc.com/news",
-    "iconUrl": "https://www.bbc.com/favicon.ico",
-    "categories": "News;UK;",
-    "keywords": "bbc;news;uk;world;"
-  },
-  "el_pais": {
-    "appName": "el_pais",
-    "displayName": "El Pa\u00eds",
-    "description": "Journal espagnol d'actualit\u00e9",
-    "url": "https://elpais.com",
-    "iconUrl": "https://play-lh.googleusercontent.com/NYeRvpSxP2NLcfjwikdU6IxOC-FnPdgRbYcgEEiTFxrZcbXAKaBahhwmD-BIGDAxm9s=w240-h480-rw",
-    "categories": "News;Spain;",
-    "keywords": "elpais;actualidad;espana;noticias;"
-  },
-  "corriere": {
-    "appName": "corriere",
-    "displayName": "Corriere della Sera",
-    "description": "Actualit\u00e9 italienne et internationale",
-    "url": "https://www.corriere.it",
-    "iconUrl": "https://www.corriere.it/favicon.ico",
-    "categories": "News;Italy;",
-    "keywords": "corriere;italia;notizie;attualit\u00e0;"
-  },
-  "dw": {
-    "appName": "dw",
-    "displayName": "Deutsche Welle",
-    "description": "German and international news in multiple languages",
-    "url": "https://www.dw.com",
-    "iconUrl": "https://www.dw.com/favicon.ico",
-    "categories": "News;Germany;",
-    "keywords": "dw;germany;international;news;"
+  "udemy": {
+    "appName": "udemy",
+    "displayName": "Udemy",
+    "description": "Online learning platform",
+    "url": "https://www.udemy.com",
+    "iconUrl": "https://www.udemy.com/favicon.ico",
+    "categories": "Education;Learning;",
+    "keywords": "learning;education;udemy;"
   }
 }

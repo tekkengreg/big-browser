@@ -1,0 +1,66 @@
+app-id: com.tekkengreg.bigbrowser.Base
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: launcher.sh
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=ELECTRON_OZONE_PLATFORM_HINT=auto
+  - --env=ELECTRON_ENABLE_LOGGING=1
+
+modules:
+  - name: nodejs
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/nodejs /app/bin
+      - cp -r . /app/lib/nodejs/
+      - ln -s /app/lib/nodejs/bin/node /app/bin/node
+      - ln -s /app/lib/nodejs/bin/npm /app/bin/npm
+      - ln -s /app/lib/nodejs/bin/npx /app/bin/npx
+    sources:
+      - type: archive
+        url: https://nodejs.org/dist/v20.11.1/node-v20.11.1-linux-x64.tar.xz
+        sha256: d8dab549b09672b03356aa2257699f3de3b58c96e74eb26a8b495fbdc9cf6fbe
+        strip-components: 1
+
+  - name: bigbrowser-base
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/bigbrowser/electron
+      - cp main.js /app/lib/bigbrowser/
+      - mkdir -p /app/lib/bigbrowser/node_modules/.bin
+      - cp -r electron-dist/* /app/lib/bigbrowser/electron/
+      - ln -s ../electron/electron /app/lib/bigbrowser/node_modules/.bin/electron
+      - chmod +x /app/lib/bigbrowser/electron/electron
+      - |
+        cat > /app/lib/bigbrowser/launcher.sh << 'EOF'
+        #!/bin/bash
+        export APP_NAME="$1"
+        export APP_URL="$2"
+        cd /app/lib/bigbrowser
+        exec ./electron/electron main.js "$1" "$2" --no-sandbox --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage
+        EOF
+      - chmod +x /app/lib/bigbrowser/launcher.sh
+      - ln -s /app/lib/bigbrowser/launcher.sh /app/bin/launcher.sh
+    sources:
+      - type: file
+        path: ../src/main.js
+        dest-filename: main.js
+      - type: dir
+        path: ../electron-dist
+        dest: electron-dist 
