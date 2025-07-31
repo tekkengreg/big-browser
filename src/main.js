@@ -11,25 +11,41 @@ console.log('Process arch:', process.arch);
 
 function createWindow() {
   console.log('Creating window...');
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    show: true,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: false,
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-      // Ajout des préférences pour le mode production
-      enableRemoteModule: true,
-      worldSafeExecuteJavaScript: true
-    }
-  });
-
+  
   // Get the URL from command line arguments or environment variable or use a default
   const appName = process.argv[2] || process.env.APP_NAME || 'BigBrowser';
   const url = process.argv[3] || process.env.APP_URL || 'https://notion.so';
   console.log('Loading app:', appName, 'at URL:', url);
+  
+  // Options spécialisées pour SketchUp
+  let webPreferences = {
+    nodeIntegration: false,
+    contextIsolation: false,
+    webSecurity: true,
+    allowRunningInsecureContent: false,
+    enableRemoteModule: true,
+    worldSafeExecuteJavaScript: true
+  };
+  
+  // Configuration spéciale pour SketchUp
+  if (appName === 'SketchUp') {
+    console.log('🎨 Configuration spécialisée pour SketchUp...');
+    webPreferences = {
+      ...webPreferences,
+      webgl: true,
+      experimentalFeatures: true,
+      experimentalCanvasFeatures: true,
+      enableBlinkFeatures: 'WebGL2',
+      allowRunningInsecureContent: true
+    };
+  }
+  
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    show: true,
+    webPreferences: webPreferences
+  });
   
   // If no specific URL provided, show help message
   if (!process.argv[3] && !process.env.APP_URL) {

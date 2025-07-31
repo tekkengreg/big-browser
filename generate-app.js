@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const path = require('path');
 const https = require('https');
 const http = require('http');
@@ -10,106 +10,10 @@ const http = require('http');
 const appConfigs = require('./flatpak_apps.json');
 
 // Créer le dossier icons s'il n'existe pas
+const iconsDBDir = './icons-db';
 const iconsDir = './icons';
 if (!fs.existsSync(iconsDir)) {
   fs.mkdirSync(iconsDir, { recursive: true });
-}
-
-function downloadIcon(iconUrl, appName) {
-  return new Promise((resolve) => {
-    console.log(`📥 Téléchargement de l'icône pour ${appName}: ${iconUrl}`);
-
-    // Déterminer l'extension basée sur l'URL
-    let extension = '.png';
-    const urlPath = new URL(iconUrl).pathname;
-    if (urlPath) {
-      const urlExt = path.extname(urlPath).toLowerCase();
-      if (['.svg', '.png', '.jpg', '.jpeg', '.ico'].includes(urlExt)) {
-        extension = urlExt;
-      }
-    }
-
-    const iconPath = path.join(iconsDir, `${appName}${extension}`);
-    const client = iconUrl.startsWith('https:') ? https : http;
-
-    const request = client.get(iconUrl, (response) => {
-      if (response.statusCode === 200) {
-        const chunks = [];
-        response.on('data', (chunk) => chunks.push(chunk));
-        response.on('end', () => {
-          const buffer = Buffer.concat(chunks);
-          fs.writeFileSync(iconPath, buffer);
-          console.log(`✅ Icône téléchargée: ${iconPath}`);
-          resolve(iconPath);
-        });
-      } else if (response.statusCode === 301 || response.statusCode === 302) {
-        // Follow redirect
-        const redirectUrl = response.headers.location;
-        console.log(`🔄 Redirection vers: ${redirectUrl}`);
-        downloadIcon(redirectUrl, appName).then(resolve);
-      } else {
-        console.warn(`⚠️  HTTP ${response.statusCode} pour ${appName}`);
-        tryFavicon(iconUrl, appName).then(resolve);
-      }
-    }).on('error', (error) => {
-      console.warn(`⚠️  Erreur de téléchargement pour ${appName}: ${error.message}`);
-      tryFavicon(iconUrl, appName).then(resolve);
-    });
-
-    // Timeout after 10 seconds
-    request.setTimeout(10000, () => {
-      request.destroy();
-      console.warn(`⚠️  Timeout pour ${appName}`);
-      tryFavicon(iconUrl, appName).then(resolve);
-    });
-  });
-}
-
-function tryFavicon(originalUrl, appName) {
-  return new Promise((resolve) => {
-    try {
-      const url = new URL(originalUrl);
-      const faviconUrl = `${url.protocol}//${url.hostname}/favicon.ico`;
-      console.log(`🔄 Tentative avec favicon: ${faviconUrl}`);
-
-      const iconPath = path.join(iconsDir, `${appName}.ico`);
-      const client = faviconUrl.startsWith('https:') ? https : http;
-
-      const request = client.get(faviconUrl, (response) => {
-        if (response.statusCode === 200) {
-          const chunks = [];
-          response.on('data', (chunk) => chunks.push(chunk));
-          response.on('end', () => {
-            const buffer = Buffer.concat(chunks);
-            if (buffer.length > 0) {
-              fs.writeFileSync(iconPath, buffer);
-              console.log(`✅ Favicon téléchargé: ${iconPath}`);
-              resolve(iconPath);
-            } else {
-              console.warn(`⚠️  Favicon vide pour ${appName}`);
-              resolve(null);
-            }
-          });
-        } else {
-          console.warn(`⚠️  Échec du téléchargement du favicon pour ${appName}`);
-          resolve(null);
-        }
-      }).on('error', () => {
-        console.warn(`⚠️  Erreur favicon pour ${appName}`);
-        resolve(null);
-      });
-
-      request.setTimeout(5000, () => {
-        request.destroy();
-        console.warn(`⚠️  Timeout favicon pour ${appName}`);
-        resolve(null);
-      });
-
-    } catch (error) {
-      console.warn(`⚠️  Erreur URL favicon pour ${appName}: ${error.message}`);
-      resolve(null);
-    }
-  });
 }
 
 function generateAppManifest(appConfig) {
@@ -121,15 +25,37 @@ function generateAppManifest(appConfig) {
   let iconSource = [];
 
   // Check which icon files exist for this app
-  const possibleExtensions = ['.png', '.svg', '.ico', '.jpg', '.jpeg'];
 
-  for (const ext of possibleExtensions) {
-    const iconPath = path.join(iconsDir, `${appConfig.appName}${ext}`);
+    const iconPath = path.join(iconsDBDir, `${appConfig.appName}.png`);
+    const iconPathDest = path.join(iconsDir, `${appConfig.appName}.png`);
     if (fs.existsSync(iconPath)) {
-      iconSource.push(`      - type: file\n        path: ../icons/${appConfig.appName}${ext}\n        dest-filename: com.tekkengreg.bigbrowser.${appConfig.appName}${ext}`);
-      break; // Only use the first icon found
+      // Vérifier et redimensionner l'icône si nécessaire
+      try {
+        // Vérifier les dimensions de l'icône
+        const dimensions = execSync(`identify -format "%wx%h" "${iconPath}"`, { encoding: 'utf-8' }).trim();
+        console.log(`📏 ${appConfig.appName}.png: ${dimensions}`);
+        
+        const [width, height] = dimensions.split('x').map(Number);
+        
+        // Si l'icône n'est pas carrée ou n'est pas 128x128, la redimensionner
+        if (width !== height || width !== 128 || height !== 128) {
+          console.log(`🔧 Redimensionnement de ${appConfig.appName}.png de ${dimensions} vers 128x128`);
+          execSync(`convert "${iconPath}" -resize 128x128! "${iconPathDest}"`);
+          
+          // Vérifier le nouveau dimensionnement
+          const newDimensions = execSync(`identify -format "%wx%h" "${iconPathDest}"`, { encoding: 'utf-8' }).trim();
+          console.log(`✅ Nouvelle taille: ${newDimensions}`);
+        } else {
+          execSync(`cp "${iconPath}" "${iconPathDest}"`);
+          console.log(`✅ ${appConfig.appName}.png est déjà à la bonne taille`);
+        }
+      } catch (error) {
+        console.log(`⚠️  Impossible de vérifier/redimensionner ${appConfig.appName}.png:`, error.message);
+        console.log(`   Assurez-vous qu'ImageMagick est installé (sudo apt install imagemagick)`);
+      }
+      
+      iconSource.push(`      - type: file\n        path: ../icons/${appConfig.appName}.png\n        dest-filename: com.tekkengreg.bigbrowser.${appConfig.appName}.png`);
     }
-  }
 
   if (iconSource.length === 0) {
     iconSource.push('      []  # No icon available');
@@ -146,7 +72,7 @@ function generateAppManifest(appConfig) {
     .replace(/      # ICON_SOURCE will be replaced by the generator/g, iconSource.join('\n'));
 }
 
-async function generateAllApps() {
+async function generateAllAppManifests() {
   console.log('🔄 Génération des manifestes Flatpak avec icônes...\n');
 
   for (const [appKey, appConfig] of Object.entries(appConfigs)) {
@@ -164,59 +90,23 @@ async function generateAllApps() {
   console.log('   3. Build des apps: pnpm run build:flatpak:all:optimized');
 }
 
-async function addNewApp(name, displayName, url, iconUrl, description, categories, keywords) {
-  const appConfig = {
-    appName: name,
-    displayName: displayName,
-    description: description || `${displayName} web application`,
-    url: url,
-    iconUrl: iconUrl,
-    categories: categories || 'Network;WebBrowser;',
-    keywords: keywords || `${name};web;browser;`
-  };
-
-  if (iconUrl) {
-    await downloadIcon(iconUrl, name);
-  }
-
-  const fileName = `manifests/com.tekkengreg.bigbrowser.${name}.yml`;
-  const content = generateAppManifest(appConfig, true);
-
-  fs.writeFileSync(fileName, content);
-  console.log(`✅ Nouvelle application générée: ${fileName}`);
-
-  return appConfig;
-}
-
-function buildAllApps() {
+async function buildAllApps() {
   console.log('🔄 Build de toutes les applications Flatpak...\n');
 
   for (const [appKey, appConfig] of Object.entries(appConfigs)) {
     const fileName = `manifests/com.tekkengreg.bigbrowser.${appConfig.appName}.yml`;
     console.log(`🔨 Building ${appConfig.appName}...`);
-
-    exec(`flatpak-builder --repo=repo --force-clean build-dir-${appConfig.appName} ${fileName}`, (error, stdout, stderr) => {
+    await new Promise((resolve, reject)=>exec(`flatpak-builder --repo=repo --force-clean build-dir-${appConfig.appName} ${fileName}`, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Erreur lors du build de ${appConfig.appName}: ${error.message}`);
-        return;
+        reject(error);
       }
       console.log(`✅ Build terminé: ${appConfig.appName}`);
-    });
+      resolve();
+    }));
   }
 
   console.log('\n🎉 Lancement de tous les builds !');
-}
-
-async function updateIcons() {
-  console.log('🔄 Mise à jour de toutes les icônes...\n');
-
-  for (const [appKey, appConfig] of Object.entries(appConfigs)) {
-    if (appConfig.iconUrl) {
-      await downloadIcon(appConfig.iconUrl, appConfig.appName);
-    }
-  }
-
-  console.log('\n✅ Toutes les icônes ont été mises à jour !');
 }
 
 // CLI Interface
@@ -224,7 +114,7 @@ if (require.main === module) {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args[0] === 'all') {
-    generateAllApps(true).catch(console.error);
+    generateAllAppManifests(true).catch(console.error);
   } else if (args[0] === 'add' && args.length >= 4) {
     const [, name, displayName, url, iconUrl, description, categories, keywords] = args;
     addNewApp(name, displayName, url, iconUrl, description, categories, keywords).catch(console.error);
@@ -244,4 +134,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { generateAppManifest, addNewApp, appConfigs, downloadIcon, updateIcons }; 
+module.exports = { generateAppManifest, appConfigs }; 

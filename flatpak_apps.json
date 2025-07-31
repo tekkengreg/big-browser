@@ -21,7 +21,7 @@
     "appName": "sketchup",
     "displayName": "SketchUp",
     "description": "SketchUp 3D modeling application",
-    "url": "https://app.sketchup.com/app",
+    "url": "https://app.sketchup.com/app?graphics_engine=classic",
     "iconUrl": "https://cdn.brandfetch.io/id6JY24Jff/w/800/h/869/theme/dark/symbol.png?c=1bxid64Mup7aczewSAYMX&t=1668081406242",
     "categories": "Graphics;3DGraphics;",
     "keywords": "3d;modeling;graphics;"
@@ -84,8 +84,10 @@
     "appName": "deepseek",
     "displayName": "DeepSeek",
     "description": "AI assistant by DeepSeek",
-    "url": "https://deepseek.com",
-    "iconUrl": "https://deepseek.com/favicon.ico"
+    "url": "https://chat.deepseek.com",
+    "iconUrl": "https://deepseek.com/favicon.ico",
+    "categories": "AI;Assistant;",
+    "keywords": "ai;chatgpt;assistant;openai;"
   },
   "netflix": {
     "appName": "netflix",

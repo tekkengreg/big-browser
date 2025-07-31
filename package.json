@@ -8,14 +8,18 @@
     "build": "electron-builder --exclude web",
     
     "generate:manifests": "node generate-app.js all",
-    "generate:icons": "node generate-app.js update-icons",
-    "add:app": "node generate-app.js add",
+    "generate:apps": "node generate-app.js build",
     
     "build:base": "flatpak-builder --user --repo=repo --force-clean build-dir-base manifests/base-template.yml",
     "build:google": "flatpak-builder --user --repo=repo --force-clean build-dir-google manifests/com.tekkengreg.bigbrowser.google.yml",
     "build:notion": "flatpak-builder --user --repo=repo --force-clean build-dir-notion manifests/com.tekkengreg.bigbrowser.notion.yml",
     "build:sketchup": "flatpak-builder --user --repo=repo --force-clean build-dir-sketchup manifests/com.tekkengreg.bigbrowser.sketchup.yml",
     "build:pinterest": "flatpak-builder --user --repo=repo --force-clean build-dir-pinterest manifests/com.tekkengreg.bigbrowser.pinterest.yml",
+    "build:youtube": "flatpak-builder --user --repo=repo --force-clean build-dir-youtube manifests/com.tekkengreg.bigbrowser.youtube.yml",
+    "build:github": "flatpak-builder --user --repo=repo --force-clean build-dir-github manifests/com.tekkengreg.bigbrowser.github.yml",
+    "build:gmail": "flatpak-builder --user --repo=repo --force-clean build-dir-gmail manifests/com.tekkengreg.bigbrowser.gmail.yml",
+    "build:canva": "flatpak-builder --user --repo=repo --force-clean build-dir-canva manifests/com.tekkengreg.bigbrowser.canva.yml",
+    "build:figma": "flatpak-builder --user --repo=repo --force-clean build-dir-figma manifests/com.tekkengreg.bigbrowser.figma.yml",
     
     "install:base": "flatpak --user install local-repo com.tekkengreg.bigbrowser.Base",
     "install:google": "flatpak --user install local-repo com.tekkengreg.bigbrowser.google",
@@ -23,12 +27,14 @@
     "update:google": "flatpak --user update --assumeyes com.tekkengreg.bigbrowser.google",
     
     "build:apps": "pnpm build:notion && pnpm build:google && pnpm build:sketchup",
+    "build:all:apps": "node generate-app.js build",
     "build:all": "pnpm build:base && pnpm install:base && pnpm build:apps",
     
     "repo:update": "echo '📦 Mise à jour du repository...' && flatpak build-update-repo repo >/dev/null 2>&1 && echo '✅ Repository mis à jour avec succès!' && echo '📋 Applications disponibles:' && flatpak remote-ls local-repo | wc -l | xargs echo -n && echo ' applications'",
     "repo:list": "flatpak remote-ls local-repo",
     "apps:list": "flatpak list --app --user | grep tekkengreg",
     
+    "clean": "rm -rf .flatpak-builder build-dir-* && echo '🧹 Cache Flatpak nettoyé'",
     "deploy": "pnpm generate:manifests && pnpm build:all && pnpm repo:update && echo '🚀 Déploiement terminé!'",
     "web:server": "http-server -p 8080 web"
   },

@@ -8,3 +8,4 @@ build-dir
 electron-dist
 repo
 manifests/com.*
+icons

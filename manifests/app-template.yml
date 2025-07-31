@@ -27,13 +27,24 @@ modules:
   - name: APPNAME
     buildsystem: simple
     build-commands:
+      - echo "Building APPNAME"
       - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps
+      - echo "Directory created"
+      - echo "Creating APPNAME"
       - |
         cat > /app/bin/APPNAME << 'EOF'
         #!/bin/bash
-        exec flatpak-spawn --host flatpak run com.tekkengreg.bigbrowser.Base "APP_DISPLAY_NAME" "APP_URL"
+        if [ "APPNAME" = "sketchup" ]; then
+          # Options spécialisées pour SketchUp (rendu logiciel forcé)
+          exec flatpak-spawn --host flatpak run --env=LIBGL_ALWAYS_SOFTWARE=1 --env=GALLIUM_DRIVER=llvmpipe com.tekkengreg.bigbrowser.Base "APP_DISPLAY_NAME" "APP_URL"
+        else
+          # Options standard pour les autres applications
+          exec flatpak-spawn --host flatpak run com.tekkengreg.bigbrowser.Base "APP_DISPLAY_NAME" "APP_URL"
+        fi
         EOF
+      - echo "chmod +x /app/bin/APPNAME"
       - chmod +x /app/bin/APPNAME
+      - echo "Creating APPNAME.desktop"
       - |
         cat > /app/share/applications/com.tekkengreg.bigbrowser.APPNAME.desktop << 'EOF'
         [Desktop Entry]
@@ -48,6 +59,7 @@ modules:
         Keywords=APP_KEYWORDS
         StartupNotify=true
         EOF
+      - echo "Copying APPNAME.desktop to /app/share/icons/hicolor/128x128/apps/"
       - cp -f com.tekkengreg.bigbrowser.APPNAME.* /app/share/icons/hicolor/128x128/apps/ 2>/dev/null || true
     sources:
       # ICON_SOURCE will be replaced by the generator 

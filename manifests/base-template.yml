@@ -22,6 +22,10 @@ finish-args:
   - --filesystem=xdg-videos:rw
   - --env=ELECTRON_OZONE_PLATFORM_HINT=auto
   - --env=ELECTRON_ENABLE_LOGGING=1
+  - --env=LIBGL_ALWAYS_SOFTWARE=1
+  - --env=GALLIUM_DRIVER=llvmpipe
+  - --env=MESA_GL_VERSION_OVERRIDE=3.3
+  - --env=MESA_GLSL_VERSION_OVERRIDE=330
 
 modules:
   - name: nodejs
@@ -53,7 +57,19 @@ modules:
         export APP_NAME="$1"
         export APP_URL="$2"
         cd /app/lib/bigbrowser
-        exec ./electron/electron main.js "$1" "$2" --no-sandbox --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage
+        
+        # Options par défaut (pour les autres apps)
+        DEFAULT_OPTIONS="--no-sandbox --disable-gpu --disable-gpu-sandbox --disable-software-rasterizer --disable-dev-shm-usage --disable-gpu-compositing --disable-gpu-rasterization --disable-webgl --disable-webgl2 --disable-3d-apis --disable-accelerated-2d-canvas --disable-accelerated-jpeg-decoding --disable-accelerated-mjpeg-decode --disable-accelerated-video-decode --use-gl=swiftshader --ignore-gpu-blacklist --disable-features=VizDisplayCompositor"
+        
+        # Options spécialisées pour SketchUp (garde WebGL mais force software rendering)
+        SKETCHUP_OPTIONS="--no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --disable-accelerated-2d-canvas --use-gl=swiftshader --enable-unsafe-webgl --ignore-gpu-blacklist --disable-gpu-vsync --disable-background-timer-throttling --user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'"
+        
+        if [ "$1" = "SketchUp" ]; then
+          echo "🎨 Lancement de SketchUp avec options GPU spécialisées..."
+          exec ./electron/electron main.js "$1" "$2" $SKETCHUP_OPTIONS
+        else
+          exec ./electron/electron main.js "$1" "$2" $DEFAULT_OPTIONS
+        fi
         EOF
       - chmod +x /app/lib/bigbrowser/launcher.sh
       - ln -s /app/lib/bigbrowser/launcher.sh /app/bin/launcher.sh
