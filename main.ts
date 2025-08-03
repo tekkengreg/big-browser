@@ -16,7 +16,7 @@ import { SizeHint, Webview } from "@webview/webview";
 const webview = new Webview();
 webview.navigate(Deno.args[0] || "https://www.wikipedia.org");
 
-webview.size = { width: 512, height: 1024, hint: SizeHint.NONE };
+webview.size = { width: 720, height: 1280, hint: SizeHint.NONE };
 webview.title = "BigBrowser";
 
 

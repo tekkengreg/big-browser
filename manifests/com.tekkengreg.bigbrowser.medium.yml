@@ -1,0 +1,86 @@
+app-id: com.tekkengreg.bigbrowser.medium
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk//48
+command: medium
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.Flatpak
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --talk-name=org.a11y.Bus
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=GTK_USE_PORTAL=1
+  - --env=WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+
+modules:
+  - name: medium
+    buildsystem: simple
+    build-commands:
+      - echo "Installing Medium"
+      - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
+      - install -Dm755 bigbrowser /app/bin/bigbrowser
+      - install -Dm644 com.tekkengreg.bigbrowser.medium.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.medium.png
+      - |
+        cat > /app/bin/medium << 'EOF'
+        #!/bin/bash
+        exec /app/bin/bigbrowser "https://medium.com"
+        EOF
+      - chmod +x /app/bin/medium
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.medium.desktop << 'EOF'
+        [Desktop Entry]
+        Name=Medium
+        Comment=Read and write stories
+        Exec=medium
+        Icon=com.tekkengreg.bigbrowser.medium
+        Terminal=false
+        Type=Application
+        StartupWMClass=Medium
+        Categories=Office;TextEditor;
+        Keywords=writing;blog;medium;read;
+        StartupNotify=true
+        MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+        EOF
+      - |
+        cat > /app/share/metainfo/com.tekkengreg.bigbrowser.medium.metainfo.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <component type="desktop-application">
+          <id>com.tekkengreg.bigbrowser.medium</id>
+          <metadata_license>CC0-1.0</metadata_license>
+          <project_license>MIT</project_license>
+          <name>Medium</name>
+          <summary>Read and write stories</summary>
+          <description>
+            <p>Read and write stories powered by BigBrowser.</p>
+            <p>BigBrowser is a simple web browser built with Deno that provides native desktop applications for web services.</p>
+          </description>
+          <categories>
+            <category>Network</category>
+            <category>WebBrowser</category>
+          </categories>
+          <url type="homepage">https://medium.com</url>
+          <launchable type="desktop-id">com.tekkengreg.bigbrowser.medium.desktop</launchable>
+          <provides>
+            <binary>medium</binary>
+          </provides>
+        </component>
+        EOF
+    sources:
+      - type: file
+        path: ../bigbrowser
+      - type: file
+        path: ../icons/medium.png
+        dest-filename: com.tekkengreg.bigbrowser.medium.png
