@@ -1,0 +1,55 @@
+app-id: com.tekkengreg.bigbrowser
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk//48
+command: bigbrowser
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.Flatpak
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --talk-name=org.a11y.Bus
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=GTK_USE_PORTAL=1
+  - --env=WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+
+modules:
+  - name: bigbrowser
+    buildsystem: simple
+    build-commands:
+      - echo "Installing BigBrowser"
+      - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps
+      - install -Dm755 bigbrowser /app/bin/bigbrowser
+      - install -Dm644 com.tekkengreg.bigbrowser.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.png
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.desktop << 'EOF'
+        [Desktop Entry]
+        Name=BigBrowser
+        Comment=Simple web browser built with Deno
+        Exec=bigbrowser %U
+        Icon=com.tekkengreg.bigbrowser
+        Terminal=false
+        Type=Application
+        StartupWMClass=BigBrowser
+        Categories=Network;WebBrowser;
+        Keywords=browser;web;internet;
+        StartupNotify=true
+        MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+        EOF
+    sources:
+      - type: file
+        path: ../bigbrowser
+      - type: file
+        path: ../icons/bigbrowser.png
+        dest-filename: com.tekkengreg.bigbrowser.png 

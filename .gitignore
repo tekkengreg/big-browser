@@ -7,4 +7,5 @@ local-repo
 build-dir
 electron-dist
 repo
-manifests/com.*
+
+bigbrowser

@@ -1,6 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch  --allow-env --allow-read --allow-net --allow-write --allow-run --allow-ffi main.ts"
+    "dev": "deno run --watch  --allow-env --allow-read --allow-net --allow-write --allow-run --allow-ffi main.ts",
+    "compile:app":"deno compile -A --output bigbrowser --unstable main.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
