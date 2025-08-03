@@ -1,0 +1,10 @@
+node_modules
+dist
+.flatpak-builder
+flatpak-builder
+local-repo
+*.flatpak
+build-dir
+electron-dist
+repo
+manifests/com.*
