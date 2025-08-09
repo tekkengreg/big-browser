@@ -1,0 +1,91 @@
+app-id: com.tekkengreg.bigbrowser.notion
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk//48
+command: notion
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.Flatpak
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --talk-name=org.a11y.Bus
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=GTK_USE_PORTAL=1
+  - --env=WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+  - --env=WEBKIT_DISABLE_COMPOSITING_MODE=1
+  - --env=WEBKIT_DISABLE_DMABUF_RENDERER=1
+  - --env=WEBKIT_FORCE_SANDBOX=0
+  - --env=XDG_CURRENT_DESKTOP=GNOME
+
+modules:
+  - name: notion
+    buildsystem: simple
+    build-commands:
+      - echo "Installing Notion"
+      - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
+      - install -Dm755 tauri-runtime /app/bin/tauri-runtime
+      - install -Dm644 com.tekkengreg.bigbrowser.notion.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.notion.png
+      - |
+        cat > /app/bin/notion << 'EOF'
+        #!/bin/bash
+        exec /app/bin/tauri-runtime "https://notion.so"
+        EOF
+      - chmod +x /app/bin/notion
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.notion.desktop << 'EOF'
+        [Desktop Entry]
+        Name=Notion
+        Comment=All-in-one workspace for notes, tasks, wikis, and databases
+        Exec=notion
+        Icon=com.tekkengreg.bigbrowser.notion
+        Terminal=false
+        Type=Application
+        StartupWMClass=Notion
+        Categories=Office;TextEditor;
+        Keywords=notes;tasks;productivity;wiki;database;
+        StartupNotify=true
+        MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+        EOF
+      - |
+        cat > /app/share/metainfo/com.tekkengreg.bigbrowser.notion.metainfo.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <component type="desktop-application">
+          <id>com.tekkengreg.bigbrowser.notion</id>
+          <metadata_license>CC0-1.0</metadata_license>
+          <project_license>MIT</project_license>
+          <name>Notion</name>
+          <summary>All-in-one workspace for notes, tasks, wikis, and databases</summary>
+          <description>
+            <p>All-in-one workspace for notes, tasks, wikis, and databases powered by BigBrowser Runtime (Tauri).</p>
+            <p>BigBrowser Runtime is a modern web browser runtime application built with Tauri and Rust.</p>
+          </description>
+          <categories>
+            <category>Network</category>
+            <category>WebBrowser</category>
+          </categories>
+          <url type="homepage">https://notion.so</url>
+          <launchable type="desktop-id">com.tekkengreg.bigbrowser.notion.desktop</launchable>
+          <provides>
+            <binary>notion</binary>
+          </provides>
+        </component>
+        EOF
+    sources:
+      - type: file
+        path: ../../../build-dir-tauri-runtime/files/bin/tauri-runtime
+        dest-filename: tauri-runtime
+      - type: file
+        path: ./icon.png
+        dest-filename: com.tekkengreg.bigbrowser.notion.png

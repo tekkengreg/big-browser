@@ -1,0 +1,91 @@
+app-id: com.tekkengreg.bigbrowser.netflix
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk//48
+command: netflix
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  - --socket=pulseaudio
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.Flatpak
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.freedesktop.portal.*
+  - --talk-name=org.a11y.Bus
+  - --filesystem=xdg-download:rw
+  - --filesystem=xdg-documents:rw
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-videos:rw
+  - --env=GTK_USE_PORTAL=1
+  - --env=WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+  - --env=WEBKIT_DISABLE_COMPOSITING_MODE=1
+  - --env=WEBKIT_DISABLE_DMABUF_RENDERER=1
+  - --env=WEBKIT_FORCE_SANDBOX=0
+  - --env=XDG_CURRENT_DESKTOP=GNOME
+
+modules:
+  - name: netflix
+    buildsystem: simple
+    build-commands:
+      - echo "Installing Netflix"
+      - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
+      - install -Dm755 tauri-runtime /app/bin/tauri-runtime
+      - install -Dm644 com.tekkengreg.bigbrowser.netflix.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.netflix.png
+      - |
+        cat > /app/bin/netflix << 'EOF'
+        #!/bin/bash
+        exec /app/bin/tauri-runtime "https://www.netflix.com"
+        EOF
+      - chmod +x /app/bin/netflix
+      - |
+        cat > /app/share/applications/com.tekkengreg.bigbrowser.netflix.desktop << 'EOF'
+        [Desktop Entry]
+        Name=Netflix
+        Comment=Watch TV shows and movies
+        Exec=netflix
+        Icon=com.tekkengreg.bigbrowser.netflix
+        Terminal=false
+        Type=Application
+        StartupWMClass=Netflix
+        Categories=Video;Media;
+        Keywords=netflix;tv;movies;video;
+        StartupNotify=true
+        MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+        EOF
+      - |
+        cat > /app/share/metainfo/com.tekkengreg.bigbrowser.netflix.metainfo.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <component type="desktop-application">
+          <id>com.tekkengreg.bigbrowser.netflix</id>
+          <metadata_license>CC0-1.0</metadata_license>
+          <project_license>MIT</project_license>
+          <name>Netflix</name>
+          <summary>Watch TV shows and movies</summary>
+          <description>
+            <p>Watch TV shows and movies powered by BigBrowser Runtime (Tauri).</p>
+            <p>BigBrowser Runtime is a modern web browser runtime application built with Tauri and Rust.</p>
+          </description>
+          <categories>
+            <category>Network</category>
+            <category>WebBrowser</category>
+          </categories>
+          <url type="homepage">https://www.netflix.com</url>
+          <launchable type="desktop-id">com.tekkengreg.bigbrowser.netflix.desktop</launchable>
+          <provides>
+            <binary>netflix</binary>
+          </provides>
+        </component>
+        EOF
+    sources:
+      - type: file
+        path: ../../../build-dir-tauri-runtime/files/bin/tauri-runtime
+        dest-filename: tauri-runtime
+      - type: file
+        path: ./icon.png
+        dest-filename: com.tekkengreg.bigbrowser.netflix.png

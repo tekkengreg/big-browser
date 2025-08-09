@@ -5,9 +5,9 @@ set -e
 echo "=== Build script pour BigBrowser Runtime (Tauri) ==="
 
 # Vérifications préalables
-if [ ! -f "apps/runtime/src-tauri/target/release/runtime" ]; then
+if [ ! -f "packages/runtimes/runtime/src-tauri/target/release/runtime" ]; then
     echo "❌ Erreur: l'exécutable Tauri runtime n'existe pas"
-    echo "Construisez d'abord l'application avec: cd apps/runtime && deno task tauri:build"
+    echo "Construisez d'abord l'application avec: cd packages/runtimes/runtime && deno task tauri:build"
     exit 1
 fi
 
@@ -16,7 +16,7 @@ if [ ! -f "icons/bigbrowser.png" ]; then
     exit 1
 fi
 
-echo "✅ Exécutable Tauri trouvé: apps/runtime/src-tauri/target/release/runtime"
+echo "✅ Exécutable Tauri trouvé: packages/runtimes/runtime/src-tauri/target/release/runtime"
 echo "✅ Icône trouvée: icons/bigbrowser.png"
 
 # Créer le dossier de build
@@ -29,8 +29,7 @@ echo "📦 Construction du Flatpak Tauri Runtime..."
 # Construction avec flatpak-builder
 flatpak-builder --user --install --force-clean \
     "$BUILD_DIR" \
-    "manifests/com.tekkengreg.bigbrowser.runtime.yml" \
-    --verbose
+    "manifests/com.tekkengreg.bigbrowser.runtime.yml"
 
 if [ $? -eq 0 ]; then
     echo "✅ Construction réussie!"

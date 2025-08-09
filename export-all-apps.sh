@@ -13,56 +13,40 @@ exported_count=0
 failed_count=0
 
 # Exporter chaque application construite
-for manifest in manifests/com.tekkengreg.bigbrowser.*.yml; do
-    # Extraire le nom de l'app du fichier manifeste
-    app_name=$(basename "$manifest" .yml)
-    
-    # Ignorer le manifeste principal
-    if [[ "$app_name" == "com.tekkengreg.bigbrowser" ]]; then
-        continue
-    fi
-    
-    # Nom de l'application courte
-    short_name="${app_name##*.}"
-    
-    # Nom du répertoire de build
-    build_dir="build-dir-$short_name"
-    
+for manifest in packages/apps/*/manifest.yml; do
+    app_dir=$(dirname "$manifest")
+    short_name=$(basename "$app_dir")
+    app_id="com.tekkengreg.bigbrowser.${short_name}"
+    build_dir="build-dir-${short_name}"
+
     # Vérifier que le répertoire de build existe
     if [ ! -d "$build_dir" ]; then
-        echo "⚠️  IGNORÉ: $app_name (répertoire de build manquant: $build_dir)"
+        echo "⚠️  IGNORÉ: $app_id (répertoire de build manquant: $build_dir)"
         echo "   Construisez d'abord avec: ./build-all-apps.sh"
         failed_count=$((failed_count + 1))
         continue
     fi
-    
-    echo "📦 Export de $app_name..."
-    
-    # Nom du fichier de sortie
-    output_file="dist/$short_name.flatpak"
-    
-    # Créer le répertoire repo temporaire pour cette app
-    temp_repo="temp-repo-$short_name"
+
+    echo "📦 Export de $app_id..."
+
+    output_file="dist/${short_name}.flatpak"
+
+    temp_repo="temp-repo-${short_name}"
     mkdir -p "$temp_repo"
-    
-    # Exporter vers le repository
+
     if flatpak build-export "$temp_repo" "$build_dir" > /dev/null 2>&1; then
-        # Créer le bundle .flatpak
-        if flatpak build-bundle "$temp_repo" "$output_file" "$app_name" > /dev/null 2>&1; then
-            # Nettoyer le repo temporaire
+        if flatpak build-bundle "$temp_repo" "$output_file" "$app_id" > /dev/null 2>&1; then
             rm -rf "$temp_repo"
-            
-            # Afficher la taille du fichier
             size=$(du -h "$output_file" | cut -f1)
-            echo "✅ $app_name exporté vers $output_file ($size)"
+            echo "✅ $app_id exporté vers $output_file ($size)"
             exported_count=$((exported_count + 1))
         else
-            echo "❌ Échec de la création du bundle pour $app_name"
+            echo "❌ Échec de la création du bundle pour $app_id"
             rm -rf "$temp_repo"
             failed_count=$((failed_count + 1))
         fi
     else
-        echo "❌ Échec de l'export vers le repository pour $app_name"
+        echo "❌ Échec de l'export vers le repository pour $app_id"
         rm -rf "$temp_repo"
         failed_count=$((failed_count + 1))
     fi

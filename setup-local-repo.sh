@@ -20,22 +20,21 @@ fi
 
 # Fonction pour exporter une application vers le repository
 export_to_repo() {
-    local app_name="$1"
+    local app_id="$1"
     local build_dir="$2"
     
-    echo "📦 Export de $app_name vers le repository local..."
+    echo "📦 Export de $app_id vers le repository local..."
     
     if [ ! -d "$build_dir" ]; then
-        echo "⚠️  IGNORÉ: $app_name (répertoire de build manquant: $build_dir)"
+        echo "⚠️  IGNORÉ: $app_id (répertoire de build manquant: $build_dir)"
         return 1
     fi
     
-    # Exporter vers le repository local
     if flatpak build-export "$REPO_DIR" "$build_dir" > /dev/null 2>&1; then
-        echo "✅ $app_name exporté vers le repository local"
+        echo "✅ $app_id exporté vers le repository local"
         return 0
     else
-        echo "❌ Échec de l'export de $app_name"
+        echo "❌ Échec de l'export de $app_id"
         return 1
     fi
 }
@@ -47,20 +46,13 @@ failed_count=0
 echo ""
 echo "🚀 Export des applications vers le repository local..."
 
-for manifest in manifests/com.tekkengreg.bigbrowser.*.yml; do
-    # Extraire le nom de l'app du fichier manifeste
-    app_name=$(basename "$manifest" .yml)
-    
-    # Ignorer le manifeste principal
-    if [[ "$app_name" == "com.tekkengreg.bigbrowser" ]]; then
-        continue
-    fi
-    
-    # Nom du répertoire de build
-    short_name="${app_name##*.}"
-    build_dir="build-dir-$short_name"
-    
-    if export_to_repo "$app_name" "$build_dir"; then
+for manifest in packages/apps/*/manifest.yml; do
+    app_dir=$(dirname "$manifest")
+    short_name=$(basename "$app_dir")
+    app_id="com.tekkengreg.bigbrowser.${short_name}"
+    build_dir="build-dir-${short_name}"
+
+    if export_to_repo "$app_id" "$build_dir"; then
         exported_count=$((exported_count + 1))
     else
         failed_count=$((failed_count + 1))

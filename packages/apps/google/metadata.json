@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.google",
+  "appName": "google",
+  "displayName": "Google Search",
+  "description": "Search the web with Google",
+  "url": "https://www.google.com/search",
+  "categories": "Network;WebBrowser;",
+  "keywords": "search;google;web;internet;browser;"
+}

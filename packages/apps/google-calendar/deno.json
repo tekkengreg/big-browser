@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "flatpak:build": "flatpak-builder --force-clean ../../build-dir-google-calendar ./manifest.yml"
+  }
+}

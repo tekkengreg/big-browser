@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.github",
+  "appName": "github",
+  "displayName": "GitHub",
+  "description": "Code hosting platform for version control and collaboration",
+  "url": "https://github.com",
+  "categories": "Development;Tools;",
+  "keywords": "code;git;github;repository;"
+}

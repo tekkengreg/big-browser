@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.sketchup",
+  "appName": "sketchup",
+  "displayName": "SketchUp",
+  "description": "SketchUp 3D modeling application",
+  "url": "https://app.sketchup.com/app",
+  "categories": "Graphics;3DGraphics;",
+  "keywords": "3d;modeling;graphics;"
+}

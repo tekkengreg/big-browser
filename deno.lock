@@ -896,7 +896,7 @@
       "jsr:@std/assert@1"
     ],
     "members": {
-      "apps/runtime": {
+      "packages/runtimes/runtime": {
         "packageJson": {
           "dependencies": [
             "npm:@tauri-apps/api@2",
@@ -912,7 +912,7 @@
           ]
         }
       },
-      "apps/runtime-deno": {
+      "packages/runtimes/runtime-deno": {
         "dependencies": [
           "jsr:@std/assert@1",
           "jsr:@webview/webview@0.9"

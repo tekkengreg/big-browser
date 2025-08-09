@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.chatgpt",
+  "appName": "chatgpt",
+  "displayName": "ChatGPT",
+  "description": "AI assistant by OpenAI",
+  "url": "https://chat.openai.com",
+  "categories": "AI;Assistant;",
+  "keywords": "ai;chatgpt;assistant;openai;"
+}

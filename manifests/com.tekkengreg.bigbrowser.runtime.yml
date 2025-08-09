@@ -92,7 +92,7 @@ modules:
         EOF
     sources:
       - type: file
-        path: ../apps/runtime/src-tauri/target/release/runtime
+        path: ../packages/runtimes/runtime/src-tauri/target/release/runtime
       - type: file
-        path: ../icons/bigbrowser.png
+        path: ../packages/runtimes/runtime/bigbrowser.png
         dest-filename: com.tekkengreg.bigbrowser.runtime.png 

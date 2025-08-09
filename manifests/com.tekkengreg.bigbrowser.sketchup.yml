@@ -31,12 +31,12 @@ modules:
     build-commands:
       - echo "Installing SketchUp"
       - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
-      - install -Dm755 bigbrowser /app/bin/bigbrowser
+      - install -Dm755 tauri-runtime /app/bin/tauri-runtime
       - install -Dm644 com.tekkengreg.bigbrowser.sketchup.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.sketchup.png
       - |
         cat > /app/bin/sketchup << 'EOF'
         #!/bin/bash
-        exec /app/bin/bigbrowser "https://app.sketchup.com/app"
+        exec /app/bin/tauri-runtime "https://app.sketchup.com/app"
         EOF
       - chmod +x /app/bin/sketchup
       - |
@@ -64,8 +64,8 @@ modules:
           <name>SketchUp</name>
           <summary>SketchUp 3D modeling application</summary>
           <description>
-            <p>SketchUp 3D modeling application powered by BigBrowser.</p>
-            <p>BigBrowser is a simple web browser built with Deno that provides native desktop applications for web services.</p>
+            <p>SketchUp 3D modeling application powered by BigBrowser Runtime (Tauriiii).</p>
+            <p>BigBrowser Runtime is a modern web browser runtime application built with Tauri and Rust.</p>
           </description>
           <categories>
             <category>Network</category>
@@ -80,7 +80,8 @@ modules:
         EOF
     sources:
       - type: file
-        path: ../bigbrowser
+        path: ../../../build-dir-tauri-runtime/files/bin/tauri-runtimeeeeee
+        dest-filename: tauri-runtime
       - type: file
         path: ../icons/sketchup.png
         dest-filename: com.tekkengreg.bigbrowser.sketchup.png

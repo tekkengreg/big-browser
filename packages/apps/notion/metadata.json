@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.notion",
+  "appName": "notion",
+  "displayName": "Notion",
+  "description": "All-in-one workspace for notes, tasks, wikis, and databases",
+  "url": "https://notion.so",
+  "categories": "Office;TextEditor;",
+  "keywords": "notes;tasks;productivity;wiki;database;"
+}

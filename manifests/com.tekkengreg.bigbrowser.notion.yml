@@ -31,12 +31,12 @@ modules:
     build-commands:
       - echo "Installing Notion"
       - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
-      - install -Dm755 bigbrowser /app/bin/bigbrowser
+      - install -Dm755 tauri-runtime /app/bin/tauri-runtime
       - install -Dm644 com.tekkengreg.bigbrowser.notion.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.notion.png
       - |
         cat > /app/bin/notion << 'EOF'
         #!/bin/bash
-        exec /app/bin/bigbrowser "https://notion.so"
+        exec /app/bin/tauri-runtime "https://notion.so"
         EOF
       - chmod +x /app/bin/notion
       - |
@@ -64,8 +64,8 @@ modules:
           <name>Notion</name>
           <summary>All-in-one workspace for notes, tasks, wikis, and databases</summary>
           <description>
-            <p>All-in-one workspace for notes, tasks, wikis, and databases powered by BigBrowser.</p>
-            <p>BigBrowser is a simple web browser built with Deno that provides native desktop applications for web services.</p>
+            <p>All-in-one workspace for notes, tasks, wikis, and databases powered by BigBrowser Runtime (Tauriiii).</p>
+            <p>BigBrowser Runtime is a modern web browser runtime application built with Tauri and Rust.</p>
           </description>
           <categories>
             <category>Network</category>
@@ -80,7 +80,8 @@ modules:
         EOF
     sources:
       - type: file
-        path: ../bigbrowser
+        path: ../../../build-dir-tauri-runtime/files/bin/tauri-runtimeeeeee
+        dest-filename: tauri-runtime
       - type: file
         path: ../icons/notion.png
         dest-filename: com.tekkengreg.bigbrowser.notion.png

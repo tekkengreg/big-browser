@@ -3,12 +3,17 @@
     "gnome:refresh": "sudo update-desktop-database && gtk-update-icon-cache",
     "repo:update": "echo '📦 Mise à jour du repository...' && flatpak build-update-repo repo >/dev/null 2>&1 && echo '✅ Repository mis à jour avec succès!' && echo '📋 Applications disponibles:' && flatpak remote-ls local-repo | wc -l | xargs echo -n && echo ' applications'",
     "repo:list": "flatpak remote-ls local-repo",
-    "apps:list": "flatpak list --app --user | grep tekkengreg"
+    "apps:list": "flatpak list --app --user | grep tekkengreg",
+    "apps:scaffold": "deno run -A scaffold-apps.ts",
+    "manifests:migrate-runtime": "deno run -A migrate-manifests-to-runtime.ts",
+    "packages:manifests:migrate-runtime": "deno run -A migrate-packages-apps-to-runtime.ts",
+    "icons:migrate": "deno run -A migrate-icons.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
   },
   "workspace": [
-    "./apps/*"
+    "./packages/runtimes/*",
+    "./packages/apps/*"
   ]
 }
