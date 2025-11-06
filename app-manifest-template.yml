@@ -1,8 +1,8 @@
-app-id: com.tekkengreg.bigbrowser.chatgpt
+app-id: {{app_id}}
 runtime: org.gnome.Platform
 runtime-version: '48'
 sdk: org.gnome.Sdk//48
-command: chatgpt
+command: {{app_name}}
 
 finish-args:
   - --share=ipc
@@ -30,55 +30,55 @@ finish-args:
   - --env=XDG_CURRENT_DESKTOP=GNOME
 
 modules:
-  - name: chatgpt
+  - name: {{app_name}}
     buildsystem: simple
     build-commands:
-      - echo "Installing ChatGPT"
+      - echo "Installing {{display_name}}"
       - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/128x128/apps /app/share/metainfo
       - install -Dm755 tauri-runtime /app/bin/tauri-runtime
-      - install -Dm644 com.tekkengreg.bigbrowser.chatgpt.png /app/share/icons/hicolor/128x128/apps/com.tekkengreg.bigbrowser.chatgpt.png
+      - install -Dm644 {{app_id}}.png /app/share/icons/hicolor/128x128/apps/{{app_id}}.png
       - |
-        cat > /app/bin/chatgpt << 'EOF'
+        cat > /app/bin/{{app_name}} << 'EOF'
         #!/bin/bash
-        exec /app/bin/tauri-runtime "https://chat.openai.com"
+        exec /app/bin/tauri-runtime "{{url}}"
         EOF
-      - chmod +x /app/bin/chatgpt
+      - chmod +x /app/bin/{{app_name}}
       - |
-        cat > /app/share/applications/com.tekkengreg.bigbrowser.chatgpt.desktop << 'EOF'
+        cat > /app/share/applications/{{app_id}}.desktop << 'EOF'
         [Desktop Entry]
-        Name=ChatGPT
-        Comment=AI assistant by OpenAI
-        Exec=chatgpt
-        Icon=com.tekkengreg.bigbrowser.chatgpt
+        Name={{display_name}}
+        Comment={{description}}
+        Exec={{app_name}}
+        Icon={{app_id}}
         Terminal=false
         Type=Application
-        StartupWMClass=ChatGPT
-        Categories=AI;Assistant;
-        Keywords=ai;chatgpt;assistant;openai;
+        StartupWMClass={{display_name}}
+        Categories={{categories}}
+        Keywords={{keywords}}
         StartupNotify=true
         MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
         EOF
       - |
-        cat > /app/share/metainfo/com.tekkengreg.bigbrowser.chatgpt.metainfo.xml << 'EOF'
+        cat > /app/share/metainfo/{{app_id}}.metainfo.xml << 'EOF'
         <?xml version="1.0" encoding="UTF-8"?>
         <component type="desktop-application">
-          <id>com.tekkengreg.bigbrowser.chatgpt</id>
+          <id>{{app_id}}</id>
           <metadata_license>CC0-1.0</metadata_license>
           <project_license>MIT</project_license>
-          <name>ChatGPT</name>
-          <summary>AI assistant by OpenAI</summary>
+          <name>{{display_name}}</name>
+          <summary>{{description}}</summary>
           <description>
-            <p>AI assistant by OpenAI powered by BigBrowser Runtime (Tauri).</p>
+            <p>{{description}} powered by BigBrowser Runtime (Tauri).</p>
             <p>BigBrowser Runtime is a modern web browser runtime application built with Tauri and Rust.</p>
           </description>
           <categories>
             <category>Network</category>
             <category>WebBrowser</category>
           </categories>
-          <url type="homepage">https://chat.openai.com</url>
-          <launchable type="desktop-id">com.tekkengreg.bigbrowser.chatgpt.desktop</launchable>
+          <url type="homepage">{{url}}</url>
+          <launchable type="desktop-id">{{app_id}}.desktop</launchable>
           <provides>
-            <binary>chatgpt</binary>
+            <binary>{{app_name}}</binary>
           </provides>
         </component>
         EOF
@@ -88,4 +88,4 @@ modules:
         dest-filename: tauri-runtime
       - type: file
         path: ./icon.png
-        dest-filename: com.tekkengreg.bigbrowser.chatgpt.png 
+        dest-filename: {{app_id}}.png 

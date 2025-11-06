@@ -36,17 +36,19 @@ for manifest in packages/apps/*/manifest.yml; do
     app_id="com.tekkengreg.bigbrowser.${short_name}"
 
     echo ""
-    echo "📦 Construction de $app_id..."
+echo "📦 Construction de $app_id..."
 
-    build_dir="build-dir-${short_name}"
+( cd "$app_dir" && deno run -A ../../../generate-app-manifest.ts --app-dir . )
 
-    if flatpak-builder --force-clean "$build_dir" "$manifest"; then
-        echo "✅ $app_id construit avec succès"
-        built_count=$((built_count + 1))
-    else
-        echo "❌ Échec de la construction de $app_id"
-        failed_count=$((failed_count + 1))
-    fi
+build_dir="$app_dir/build-dir"
+
+if flatpak-builder --force-clean "$build_dir" "$manifest"; then
+    echo "✅ $app_id construit avec succès"
+    built_count=$((built_count + 1))
+else
+    echo "❌ Échec de la construction de $app_id"
+    failed_count=$((failed_count + 1))
+fi
 done
 
 echo ""
