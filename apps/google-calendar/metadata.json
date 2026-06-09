@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.google-calendar",
+  "appName": "google-calendar",
+  "displayName": "Google Calendar",
+  "description": "Calendar by Google",
+  "url": "https://calendar.google.com",
+  "categories": "Office;Calendar;",
+  "keywords": "calendar;google;communication;"
+}

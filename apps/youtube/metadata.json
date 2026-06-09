@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.youtube",
+  "appName": "youtube",
+  "displayName": "YouTube",
+  "description": "Watch and upload videos",
+  "url": "https://www.youtube.com",
+  "categories": "Video;Media;",
+  "keywords": "video;youtube;streaming;media;"
+}

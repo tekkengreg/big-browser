@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.netflix",
+  "appName": "netflix",
+  "displayName": "Netflix",
+  "description": "Watch TV shows and movies",
+  "url": "https://www.netflix.com",
+  "categories": "Video;Media;",
+  "keywords": "netflix;tv;movies;video;"
+}

@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "generate-manifest": "deno run -A ../../../generate-app-manifest.ts --app-dir .",
+    "flatpak:build": "flatpak-builder --force-clean ./build-dir ./manifest.yml",
+    "build": "deno task generate-manifest && deno task flatpak:build"
+  }
+}

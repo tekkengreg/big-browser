@@ -1,0 +1,9 @@
+{
+  "appId": "com.tekkengreg.bigbrowser.gmail",
+  "appName": "gmail",
+  "displayName": "Gmail",
+  "description": "Email by Google",
+  "url": "https://mail.google.com",
+  "categories": "Network;Email;",
+  "keywords": "email;gmail;google;communication;"
+}
