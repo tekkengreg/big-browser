@@ -1,0 +1,106 @@
+name: Publish
+
+# Sur push vers main : builde tous les Sites dans un dépôt OSTree (signé GPG si
+# les secrets existent), génère le catalogue + les .flatpakref, et publie le tout
+# sur GitHub Pages. Le dépôt est régénéré intégralement à chaque publication.
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'sites/**'
+      - 'engine/**'
+      - 'tooling/**'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une seule publication à la fois.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer les dépendances
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder python3-yaml \
+                                  appstream desktop-file-utils
+
+      - name: Flathub + runtimes GNOME
+        run: |
+          flatpak remote-add --if-not-exists --user flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.gnome.Platform//49 org.gnome.Sdk//49
+
+      - name: Importer la clé GPG (si configurée)
+        id: gpg
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          if [ -n "$GPG_PRIVATE_KEY" ] && [ -n "$GPG_KEY_ID" ]; then
+            echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+            gpg --export "$GPG_KEY_ID" > pubkey.gpg
+            echo "sign=1" >> "$GITHUB_OUTPUT"
+            echo "keyid=$GPG_KEY_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "sign=0" >> "$GITHUB_OUTPUT"
+            echo "::warning::Aucune clé GPG (secrets GPG_PRIVATE_KEY/GPG_KEY_ID) — dépôt NON signé."
+          fi
+
+      - name: Builder tous les Sites dans le dépôt OSTree
+        env:
+          SIGN: ${{ steps.gpg.outputs.sign }}
+          KEYID: ${{ steps.gpg.outputs.keyid }}
+        run: |
+          gpgargs=""
+          [ "$SIGN" = "1" ] && gpgargs="--gpg-sign=$KEYID"
+          mkdir -p repo
+          for d in sites/*/; do
+            id=$(basename "$d")
+            echo "::group::$id"
+            python3 tooling/bbhub.py validate "$d"
+            python3 tooling/bbhub.py generate "$d" --out dist
+            desktop-file-validate "dist/$id/$id.desktop"
+            appstreamcli validate --no-net "dist/$id/$id.metainfo.xml"
+            flatpak-builder --user --disable-rofiles-fuse --force-clean \
+              --repo=repo $gpgargs --default-branch=stable \
+              "dist/$id/.build" "dist/$id/$id.yml"
+            echo "::endgroup::"
+          done
+          flatpak build-update-repo $gpgargs repo
+
+      - name: Configurer GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Assembler le site (_site)
+        env:
+          SIGN: ${{ steps.gpg.outputs.sign }}
+        run: |
+          keyarg=""
+          [ "$SIGN" = "1" ] && keyarg="--gpg-key-file pubkey.gpg"
+          python3 tooling/catalog.py --sites sites --out _site \
+            --base-url "${{ steps.pages.outputs.base_url }}" $keyarg
+          cp -r repo _site/repo
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Déployer sur Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bigbrowser.io/site.schema.json",
+  "title": "Big Browser — manifeste de Site",
+  "description": "Source unique d'un Site (site.yaml). Le tooling en dérive les artefacts Flatpak.",
+  "type": "object",
+  "required": ["id", "title", "url", "icon", "summary", "description", "project_license"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^io\\.bigbrowser\\.[A-Za-z][A-Za-z0-9_]*$",
+      "description": "App-id reverse-DNS sous le namespace du Hub (ex. io.bigbrowser.Wikipedia)."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "url": { "type": "string", "pattern": "^https://" },
+    "icon": { "type": "string", "pattern": "\\.(svg|png)$" },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "description": { "type": "string", "minLength": 1 },
+    "project_license": { "type": "string", "description": "SPDX (ex. MIT) ou LicenseRef-proprietary." },
+    "developer_name": { "type": "string" },
+    "homepage": { "type": "string", "format": "uri" },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Catégories freedesktop/AppStream (Network, Education, Office, ...)."
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "screenshots": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "description": "URLs d'images (la 1re sert de capture par défaut)."
+    },
+    "version": { "type": "string" },
+    "date": { "type": "string", "description": "Date de release ISO (YYYY-MM-DD)." },
+    "runtime_version": { "type": "string", "description": "Version org.gnome.Platform (défaut: 49)." },
+    "allowed_domains": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Domaines internes. Hors liste → navigateur système. L'hôte de url est ajouté d'office."
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "notifications": { "type": "boolean" },
+        "geolocation": { "type": "boolean" },
+        "media": { "type": "boolean", "description": "Caméra/micro (ajoute --device=all + pulseaudio)." }
+      }
+    },
+    "finish_args_extra": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Permissions Flatpak supplémentaires (ex. --talk-name=...)."
+    },
+    "inject_css": { "type": "string" },
+    "inject_js": { "type": "string" },
+    "ignore_tls_errors": { "type": "boolean", "description": "Debug uniquement." }
+  }
+}

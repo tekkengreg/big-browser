@@ -1,0 +1,29 @@
+# Manifeste de Site Big Browser — source unique.
+# Le tooling (tooling/bbhub.py) en dérive : flatpak manifest, metainfo, .desktop, site.json.
+
+# --- Requis ---
+id: io.bigbrowser.Wikipedia
+title: Wikipédia
+url: https://fr.wikipedia.org
+icon: icon.svg
+summary: L'encyclopédie libre, en application autonome
+description: |
+  Wikipédia encapsulée par Big Browser : la version française de l'encyclopédie
+  libre, dans sa propre fenêtre, avec son icône, son stockage isolé et sa place
+  dans le menu — comme une application native plutôt qu'un onglet de navigateur.
+project_license: MIT
+
+# --- Métadonnées catalogue (AppStream) ---
+developer_name: Big Browser
+homepage: https://fr.wikipedia.org
+categories: [Network, Education]
+keywords: [encyclopédie, wiki, référence]
+version: '1.0'
+date: '2026-06-09'
+
+# --- Comportement du Site ---
+allowed_domains: [wikipedia.org, wikimedia.org]
+permissions:
+  notifications: false
+  geolocation: false
+  media: false

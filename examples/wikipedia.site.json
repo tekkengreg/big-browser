@@ -1,0 +1,12 @@
+{
+  "id": "io.bigbrowser.Wikipedia",
+  "title": "Wikipédia",
+  "url": "https://fr.wikipedia.org",
+  "icon": "icon.svg",
+  "allowed_domains": ["wikipedia.org", "wikimedia.org"],
+  "permissions": {
+    "notifications": false,
+    "geolocation": false,
+    "media": false
+  }
+}

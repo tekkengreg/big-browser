@@ -1,0 +1,69 @@
+name: CI
+
+# Sur chaque Pull Request touchant les Sites, l'Engine ou le tooling :
+# valide les manifestes, génère les artefacts, lint AppStream/desktop, et builde
+# chaque Site (sans publier) pour garantir que tout compile.
+
+on:
+  pull_request:
+    paths:
+      - 'sites/**'
+      - 'engine/**'
+      - 'tooling/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      sites: ${{ steps.list.outputs.sites }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        name: Lister les Sites
+        run: |
+          sites=$(find sites -mindepth 1 -maxdepth 1 -type d | sort \
+                  | jq -R -s -c 'split("\n")[:-1]')
+          echo "sites=$sites" >> "$GITHUB_OUTPUT"
+          echo "Sites détectés : $sites"
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.sites != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        site: ${{ fromJson(needs.prepare.outputs.sites) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer les dépendances
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder python3-yaml \
+                                  appstream desktop-file-utils
+
+      - name: Flathub + runtimes GNOME
+        run: |
+          flatpak remote-add --if-not-exists --user flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.gnome.Platform//49 org.gnome.Sdk//49
+
+      - name: Valider + générer
+        run: |
+          python3 tooling/bbhub.py validate "${{ matrix.site }}"
+          python3 tooling/bbhub.py generate "${{ matrix.site }}" --out dist
+
+      - name: Lint des artefacts
+        run: |
+          id=$(basename "${{ matrix.site }}")
+          desktop-file-validate "dist/$id/$id.desktop"
+          appstreamcli validate --no-net "dist/$id/$id.metainfo.xml"
+
+      - name: Build Flatpak (sans publication)
+        run: |
+          id=$(basename "${{ matrix.site }}")
+          flatpak-builder --user --disable-rofiles-fuse --force-clean \
+            "dist/$id/.build" "dist/$id/$id.yml"

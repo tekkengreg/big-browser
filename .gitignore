@@ -1,12 +1,14 @@
-node_modules
-dist
-.flatpak-builder
-flatpak-builder
-local-repo
-*.flatpak
-build-dir
-electron-dist
-repo
+# Artefacts générés par le tooling
+/dist/
 
-bigbrowser
-export-repo
+# Caches flatpak-builder
+.flatpak-builder/
+.flatpak-build/
+*/.build/
+
+# Dépôt OSTree local
+/repo/
+
+# Python
+__pycache__/
+*.pyc
