@@ -103,6 +103,9 @@ def finish_args(manifest: dict) -> list[str]:
         "--socket=wayland",
         "--socket=fallback-x11",
         "--device=dri",
+        # L'Engine enregistre les téléchargements dans le dossier Téléchargements
+        # via un chemin direct (pas le portail) : accès en écriture nécessaire.
+        "--filesystem=xdg-download:create",
     ]
     perms = manifest.get("permissions", {}) or {}
     if perms.get("media"):

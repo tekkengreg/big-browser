@@ -78,3 +78,9 @@ store complet et un GPU natif, aucune de ces variables n'est nécessaire.
 - **Titre dynamique** : `<titre de page> — <titre du Site>`.
 - **Raccourcis** : `Ctrl +/-/0` (zoom), `F5` ou `Ctrl+R` (recharger).
 - **Géométrie** : taille de fenêtre persistée sous `~/.local/share/bigbrowser/<id>/window-state.json`.
+- **Téléchargements** : enregistrés sans dialogue dans le dossier Téléchargements XDG
+  (`~/Téléchargements`, repli `$HOME`) ; collisions de noms gérées (`fichier (1).ext`). En Flatpak,
+  l'accès en écriture est fourni par le `finish-arg` `--filesystem=xdg-download:create` (ajouté
+  d'office par le tooling).
+- **Menu contextuel** : épuré pour une app mono-site — édition (copier/coller…), liens et
+  téléchargements conservés ; ouverture en nouvelle fenêtre et inspecteur retirés.

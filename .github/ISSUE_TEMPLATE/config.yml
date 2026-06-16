@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question ou discussion
+    url: https://github.com/tekkengreg/big-browser/discussions
+    about: Pour les questions générales, plutôt qu'une Issue.

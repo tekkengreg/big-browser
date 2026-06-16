@@ -1,0 +1,82 @@
+name: Proposer un Site
+description: Suggérer une webapp à enrober comme application autonome (aucune compétence technique requise).
+title: "[Site] "
+labels: ["site-proposé"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de proposer un Site ! Remplissez ce formulaire : un mainteneur (ou vous-même)
+        en fera un `site.yaml` et une Pull Request. Voir [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).
+  - type: input
+    id: title
+    attributes:
+      label: Nom affiché
+      description: Le nom de l'application tel qu'il apparaîtra dans le menu.
+      placeholder: Mon Site
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL de la webapp
+      description: L'adresse à ouvrir au lancement. Doit être en https://.
+      placeholder: https://app.example.com
+    validations:
+      required: true
+  - type: input
+    id: summary
+    attributes:
+      label: Résumé (une ligne)
+      description: Phrase courte décrivant l'app (≤ 200 caractères).
+      placeholder: L'encyclopédie libre, en application autonome
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Quelques phrases présentant l'application (servira à la fiche du catalogue).
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Licence de la webapp
+      description: Si connue (ex. MIT). Sinon laissez vide ou indiquez "propriétaire".
+      placeholder: MIT
+    validations:
+      required: false
+  - type: textarea
+    id: icon
+    attributes:
+      label: Icône
+      description: Glissez ici une image (.svg de préférence, sinon .png ≥ 256×256), ou un lien vers l'icône officielle.
+    validations:
+      required: false
+  - type: input
+    id: allowed_domains
+    attributes:
+      label: Domaines internes (optionnel)
+      description: Domaines qui restent dans l'app (le reste s'ouvre dans le navigateur système). L'hôte de l'URL est inclus d'office.
+      placeholder: app.example.com, cdn.example.com
+    validations:
+      required: false
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: Permissions nécessaires (optionnel)
+      description: Refusées par défaut. Ne cochez que si l'app en a réellement besoin.
+      options:
+        - label: Notifications
+        - label: Géolocalisation
+        - label: Caméra / micro (média)
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vérifications
+      options:
+        - label: J'ai cherché dans les Issues existantes : ce Site n'est pas déjà proposé.
+          required: true
+        - label: L'URL est en https:// et fonctionne dans un navigateur.
+          required: true
