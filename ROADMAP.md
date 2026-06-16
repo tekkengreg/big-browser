@@ -215,12 +215,14 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 ## 4. Phases de réalisation
 
 ### Phase 0 — Fondations (préparer le terrain)
-- [ ] Initialiser le dépôt git (actuellement non versionné), `README`, licence, structure monorepo.
-- [ ] Réserver le namespace `io.bigbrowser.*` (domaine/org GitHub) et fixer l'URL Pages du Hub.
+- [x] Initialiser le dépôt git, `README`, structure monorepo. *(reste : ajouter une `LICENSE`)*
+- [x] Réserver le namespace `io.bigbrowser.*` et fixer l'URL Pages du Hub
+      (`https://tekkengreg.github.io/big-browser/`).
 - [x] Identité tranchée : projet **Big Browser**, unité = **Site**, moteur = **Engine**.
 - [x] Stack Engine tranchée : **GTK4 + WebKitGTK 6.0**.
-- [x] Hébergement tranché : **dépôt OSTree statique sur GitHub Pages** (branche `gh-pages`).
-- [ ] Activer GitHub Pages sur le dépôt, générer la paire de clés GPG, stocker la privée en secret.
+- [x] Hébergement tranché : **dépôt OSTree statique sur GitHub Pages**.
+- [x] Activer GitHub Pages, générer la paire de clés GPG, stocker la privée en secret
+      (dépôt publié **signé** : `GPGKey` présent dans le `.flatpakrepo`).
 
 ### Phase 1 — Engine paramétrable (MVP technique)
 - [x] Refactor `wikissb.js` → `engine/bigbrowser.js` (GTK4/WebKit6) lisant un manifeste externe.
@@ -248,13 +250,15 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 - [x] Workflow publish (`publish.yml`) : build → OSTree signé GPG → catalogue → GitHub Pages.
 - [x] `tooling/catalog.py` : `index.html` + `bigbrowser.flatpakrepo` + `.flatpakref` par Site.
 - [x] README racine : mise en route Pages + secrets GPG.
-- [ ] Brancher sur un vrai dépôt GitHub : activer Pages, poser les secrets, premier run.
-- **Jalon : merger une PR publie automatiquement le Site sur le Hub (à vérifier en réel).**
+- [x] Brancher sur un vrai dépôt GitHub : Pages activé, secrets posés, run **Publish** en succès.
+- **✅ Jalon atteint : le push sur `main` a publié le Site sur le Hub (vérifié en réel).**
 
 ### Phase 5 — Hub & catalogue public
-- [ ] Signer et héberger le repo OSTree, générer `bigbrowser.flatpakrepo` + `.flatpakref`.
-- [ ] Site catalogue statique sur GitHub Pages.
-- **Jalon : un inconnu peut ajouter le remote et installer un Site en 1 clic.**
+- [x] Repo OSTree signé GPG hébergé, `bigbrowser.flatpakrepo` + `.flatpakref` par Site générés.
+- [x] Site catalogue statique (`index.html`) servi sur GitHub Pages.
+- [x] Install de bout en bout validée : `remote-add` + `flatpak install io.bigbrowser.Wikipedia`
+      depuis le Hub (~33 Ko, dédup OSTree confirmée) + lancement sans erreur.
+- **✅ Jalon atteint : un inconnu peut ajouter le remote et installer un Site en 1 clic.**
 
 ### Phase 6 — Soumission communautaire & gouvernance
 - [ ] `CONTRIBUTING.md`, templates Issue/PR, CODEOWNERS, règles de revue.
