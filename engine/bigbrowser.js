@@ -173,6 +173,9 @@ function makeWebView(manifest) {
     const cookieFile = GLib.build_filenamev([base, 'cookies.sqlite']);
     cookies.set_persistent_storage(cookieFile, WebKit.CookiePersistentStorage.SQLITE);
 
+    // Téléchargements → dossier Téléchargements, sans dialogue.
+    setupDownloads(session);
+
     // Injection CSS/JS optionnelle.
     const ucm = new WebKit.UserContentManager();
     if (manifest.inject_css) {
@@ -207,6 +210,72 @@ function openExternal(parentWindow, uri) {
     } catch (e) {
         printerr(`Big Browser: UriLauncher indisponible : ${e.message}`);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Téléchargements : enregistrés dans le dossier Téléchargements (XDG), sans
+// boîte de dialogue. En Flatpak, l'écriture passe par le portail de fichiers.
+// ---------------------------------------------------------------------------
+
+function downloadsDir() {
+    return GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+        || GLib.get_home_dir();
+}
+
+// Évite d'écraser un fichier existant : « doc.pdf » → « doc (1).pdf ».
+function uniqueDestination(dir, filename) {
+    let candidate = GLib.build_filenamev([dir, filename]);
+    if (!GLib.file_test(candidate, GLib.FileTest.EXISTS))
+        return candidate;
+    const dot = filename.lastIndexOf('.');
+    const stem = dot > 0 ? filename.slice(0, dot) : filename;
+    const ext = dot > 0 ? filename.slice(dot) : '';
+    let i = 1;
+    do {
+        candidate = GLib.build_filenamev([dir, `${stem} (${i})${ext}`]);
+        i++;
+    } while (GLib.file_test(candidate, GLib.FileTest.EXISTS));
+    return candidate;
+}
+
+function setupDownloads(session) {
+    const dir = downloadsDir();
+    session.connect('download-started', (_s, download) => {
+        download.connect('decide-destination', (d, suggested) => {
+            d.set_destination(uniqueDestination(dir, suggested || 'download'));
+            return true;
+        });
+        download.connect('finished', () => {
+            printerr(`Big Browser: téléchargement terminé → ${download.get_destination()}`);
+        });
+        download.connect('failed', (_d, error) => {
+            printerr(`Big Browser: téléchargement échoué : ${error.message}`);
+        });
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Menu contextuel minimal : on garde l'édition (copier/coller…), les liens et
+// téléchargements, mais on retire ce qui n'a pas de sens dans une app mono-site
+// (ouverture en nouvelle fenêtre — déjà bloquée — et l'inspecteur).
+// ---------------------------------------------------------------------------
+
+const HIDDEN_CONTEXT_ACTIONS = [
+    'OPEN_LINK_IN_NEW_WINDOW',
+    'OPEN_IMAGE_IN_NEW_WINDOW',
+    'OPEN_FRAME_IN_NEW_WINDOW',
+    'OPEN_MEDIA_IN_NEW_WINDOW',
+    'INSPECT_ELEMENT',
+];
+
+function hiddenContextActions() {
+    const set = new Set();
+    for (const key of HIDDEN_CONTEXT_ACTIONS) {
+        const value = WebKit.ContextMenuAction[key];
+        if (value !== undefined)
+            set.add(value);
+    }
+    return set;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +370,16 @@ function main(argv) {
             if (grant) request.allow();
             else request.deny();
             return true;
+        });
+
+        // Menu contextuel épuré : on retire les entrées sans objet pour un Site.
+        const hidden = hiddenContextActions();
+        webView.connect('context-menu', (_v, menu, _hit) => {
+            for (const item of menu.get_items()) {
+                if (hidden.has(item.get_stock_action()))
+                    menu.remove(item);
+            }
+            return false; // false = afficher le menu (épuré)
         });
 
         // Raccourcis : zoom (Ctrl +/-/0) et rechargement (F5, Ctrl+R).

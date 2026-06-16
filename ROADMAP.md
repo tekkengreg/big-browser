@@ -133,9 +133,9 @@ Généraliser `wikissb.js` pour qu'il ne soit plus codé en dur sur Wikipedia.
 - [ ] Politique de navigation : liens hors `allowed_domains` → ouverts dans le navigateur système
       (logique `decide-policy` déjà présente, à rendre paramétrable).
 - [ ] Persistance fenêtre (taille/position), titre dynamique = `<title>` de la page.
-- [ ] Gestion : notifications, téléchargements, permissions (caméra/micro/géoloc) configurables.
-- [ ] Zoom, raccourcis clavier de base, menu contextuel minimal.
-- [ ] (Option) injection de CSS/JS custom par Site (ex. masquer un bandeau).
+- [x] Gestion : notifications, téléchargements, permissions (caméra/micro/géoloc) configurables.
+- [x] Zoom, raccourcis clavier de base, menu contextuel minimal.
+- [x] (Option) injection de CSS/JS custom par Site (ex. masquer un bandeau).
 
 ### 3.2 Format & système de soumission d'un Site (`/sites`)
 Un dossier par Site : `sites/<io.bigbrowser.NomDuSite>/`.
