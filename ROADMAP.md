@@ -263,10 +263,10 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 
 ### Phase 6 — Soumission communautaire & gouvernance
 - [x] `CONTRIBUTING.md`, templates Issue (formulaire « Proposer un Site ») / PR, `CODEOWNERS`.
-- [ ] Politique de modération (Sites interdits, marques, licences) — ébauchée dans `CONTRIBUTING.md`,
-      à formaliser (ex. `CODE_OF_CONDUCT.md` + critères de refus).
-- [ ] Activer GitHub Discussions (référencé par le template d'Issue).
-- **Jalon : une première contribution externe est mergée et publiée.**
+- [x] Politique de modération formalisée : `MODERATION.md` (critères d'acceptation/refus :
+      marques, licences, sécurité, contenu) + `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1).
+- [x] GitHub Discussions activé (référencé par le template d'Issue et le CONTRIBUTING).
+- **Jalon (en attente) : une première contribution externe mergée et publiée.**
 
 ### Phase 7 — Durcissement & finitions (post-MVP)
 - [ ] Sandbox Flatpak au plus juste (réseau, pas d'accès FS hôte inutile).

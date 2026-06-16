@@ -49,7 +49,8 @@ Quelques points qui font échouer la validation :
 
 > **Périmètre & marques** : on enrobe des sites tiers, on ne les usurpe pas. Le préfixe
 > `io.bigbrowser.*` est obligatoire. Renseignez une `project_license` honnête (la licence de la
-> webapp, pas la nôtre).
+> webapp, pas la nôtre). Les critères d'acceptation et de refus sont détaillés dans
+> [`MODERATION.md`](MODERATION.md).
 
 ### 3. Valider et tester localement
 
@@ -92,3 +93,9 @@ Voir [`CLAUDE.md`](CLAUDE.md) pour la vue d'ensemble de l'architecture (chaîne 
 
 Le code et la documentation sont **en français** — merci de conserver cette langue dans les
 commentaires et messages. Restez cohérent avec le style des fichiers voisins.
+
+## Conduite
+
+La participation au projet est régie par le [code de conduite](CODE_OF_CONDUCT.md). Pour les
+questions ouvertes, utilisez les [Discussions](https://github.com/tekkengreg/big-browser/discussions)
+plutôt qu'une Issue.
