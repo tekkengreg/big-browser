@@ -215,7 +215,7 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 ## 4. Phases de réalisation
 
 ### Phase 0 — Fondations (préparer le terrain)
-- [x] Initialiser le dépôt git, `README`, structure monorepo. *(reste : ajouter une `LICENSE`)*
+- [x] Initialiser le dépôt git, `README`, structure monorepo, `LICENSE` (MIT).
 - [x] Réserver le namespace `io.bigbrowser.*` et fixer l'URL Pages du Hub
       (`https://tekkengreg.github.io/big-browser/`).
 - [x] Identité tranchée : projet **Big Browser**, unité = **Site**, moteur = **Engine**.
@@ -261,8 +261,10 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 - **✅ Jalon atteint : un inconnu peut ajouter le remote et installer un Site en 1 clic.**
 
 ### Phase 6 — Soumission communautaire & gouvernance
-- [ ] `CONTRIBUTING.md`, templates Issue/PR, CODEOWNERS, règles de revue.
-- [ ] Politique de modération (Sites interdits, marques, licences).
+- [x] `CONTRIBUTING.md`, templates Issue (formulaire « Proposer un Site ») / PR, `CODEOWNERS`.
+- [ ] Politique de modération (Sites interdits, marques, licences) — ébauchée dans `CONTRIBUTING.md`,
+      à formaliser (ex. `CODE_OF_CONDUCT.md` + critères de refus).
+- [ ] Activer GitHub Discussions (référencé par le template d'Issue).
 - **Jalon : une première contribution externe est mergée et publiée.**
 
 ### Phase 7 — Durcissement & finitions (post-MVP)

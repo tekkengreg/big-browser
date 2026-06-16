@@ -1,0 +1,7 @@
+# Propriétaires par défaut : toute PR requiert leur revue.
+*               @tekkengreg
+
+# Le cœur (Engine, tooling, CI) est sensible : revue obligatoire du mainteneur.
+/engine/        @tekkengreg
+/tooling/       @tekkengreg
+/.github/       @tekkengreg
