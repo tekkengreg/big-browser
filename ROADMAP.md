@@ -127,12 +127,11 @@ métadonnées. Trois mécanismes Flatpak/OSTree gardent le dépôt léger :
 ### 3.1 Engine — moteur Big Browser (`/engine`)
 Généraliser `wikissb.js` pour qu'il ne soit plus codé en dur sur Wikipedia.
 
-- [ ] Lire la config au démarrage (variable d'env `BIGBROWSER_SITE` ou fichier installé
+- [x] Lire la config au démarrage (argument CLI, env `BIGBROWSER_SITE`, ou fichier installé
       `/app/share/<app-id>/site.json`) : `url`, `title`, `allowed_domains[]`, `icon`.
-- [ ] WebView avec `NetworkSession`/stockage isolé par app-id (concept déjà esquissé dans `wikissb.js`).
-- [ ] Politique de navigation : liens hors `allowed_domains` → ouverts dans le navigateur système
-      (logique `decide-policy` déjà présente, à rendre paramétrable).
-- [ ] Persistance fenêtre (taille/position), titre dynamique = `<title>` de la page.
+- [x] WebView avec `NetworkSession`/stockage isolé par app-id.
+- [x] Politique de navigation : liens hors `allowed_domains` (et pop-ups) → navigateur système.
+- [x] Persistance fenêtre (taille), titre dynamique = `<title>` de la page.
 - [x] Gestion : notifications, téléchargements, permissions (caméra/micro/géoloc) configurables.
 - [x] Zoom, raccourcis clavier de base, menu contextuel minimal.
 - [x] (Option) injection de CSS/JS custom par Site (ex. masquer un bandeau).
@@ -165,46 +164,48 @@ allowed_domains: [app.example.com, cdn.example.com]
 permissions: { notifications: true, geolocation: false }
 ```
 
-- [ ] Définir le **schéma JSON Schema** du manifeste (validation automatique).
-- [ ] Convention d'arborescence (`site.yml`, `icon.svg`, `screenshots/`).
-- [ ] `CONTRIBUTING.md` : guide pas-à-pas de soumission + template de PR.
-- [ ] Template d'*Issue* "Proposer un Site" pour non-techniciens (génère un brouillon de PR).
+- [x] Définir le **schéma JSON Schema** du manifeste (`tooling/site.schema.json`).
+- [x] Convention d'arborescence (`site.yaml` + `icon.svg`).
+- [x] `CONTRIBUTING.md` : guide pas-à-pas de soumission + template de PR.
+- [x] Template d'*Issue* "Proposer un Site" pour non-techniciens (formulaire YAML).
 
 ### 3.3 Tooling de build (`/tooling`)
 Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 
-- [ ] `validate` : vérifie le manifeste contre le JSON Schema + ID unique + URL/icône valides.
-- [ ] `generate` : produit pour chaque Site
-  - `<id>.flatpak.yml` (manifeste flatpak-builder : module Engine partagé + le `site.json`),
+- [x] `validate` : vérifie le manifeste (champs requis, id `io.bigbrowser.*` = nom du dossier,
+      url https, icône). Validation à la main dans `bbhub.py`, schéma de référence à part.
+- [x] `generate` : produit pour chaque Site
+  - `<id>.yml` (manifeste flatpak-builder : module Engine partagé + le `site.json`),
   - `<id>.metainfo.xml` (AppStream : nom, résumé, description, screenshots, catégories, licence),
   - `<id>.desktop` (Exec = Engine, Icon, Categories),
-  - icônes redimensionnées (hicolor 64/128/256).
-- [ ] `build` : appelle `flatpak-builder` localement (pour tester) → `.flatpak` bundle.
-- [ ] Tests : un faux manifeste → vérifie les artefacts générés.
+  - icône installée telle quelle (svg → scalable, png → 256²). *(pas de redimensionnement)*
+- [x] `build` : appelle `flatpak-builder` localement (`--install` ou `--repo`).
+- [x] Tests : `tooling/test_bbhub.py` (validate, finish_args, runtime json, generate) — 16 cas,
+      lancés en CI (job `test`).
 
 ### 3.4 Système de build Flatpak (CI)
-- [ ] Image/Action avec `flatpak`, `flatpak-builder`, runtimes `org.gnome.Platform//<ver>` + SDK.
-- [ ] Chaque Site embarque l'Engine via le module partagé `/engine` (cf. décision d'archi §2) ;
+- [x] Image/Action avec `flatpak`, `flatpak-builder`, runtimes `org.gnome.Platform//49` + SDK.
+- [x] Chaque Site embarque l'Engine via le module partagé `/engine` (cf. décision d'archi §2) ;
       OSTree déduplique le binaire entre tous les Sites.
-- [ ] Build matriciel : un Site modifié dans la PR → uniquement celui-ci est rebâti (diff `sites/`).
-- [ ] **Rebuild global déclenché si `/engine` change** : tous les Sites rebâtis pour intégrer
-      le nouvel Engine (copié au build, pas au runtime).
-- [ ] Vérifications qualité : `flatpak run org.freedesktop.appstream-glib validate` sur le metainfo,
-      `desktop-file-validate`, lint icône.
-- [ ] Publication d'artefacts de test (`.flatpak`) sur la PR pour essai manuel.
+- [x] Build matriciel en CI (`ci.yml`) : matrice par Site.
+      *(NB : matrice sur **tous** les Sites, pas seulement ceux modifiés dans la PR — diff `sites/`
+      non implémenté ; acceptable au volume actuel.)*
+- [x] **Rebuild global quand `/engine` change** : `publish.yml` rebuilde tous les Sites à chaque
+      push sur `main` (couvre de fait le changement d'Engine copié au build).
+- [x] Vérifications qualité : `appstreamcli validate` sur le metainfo + `desktop-file-validate`.
+- [x] Publication d'artefacts de test (`.flatpak`) sur la PR : `ci.yml` produit un bundle par Site
+      via `flatpak build-bundle` et l'uploade (`actions/upload-artifact`).
 
 ### 3.5 Big Browser Hub — publication (OSTree statique sur GitHub Pages)
-- [ ] Générer le dépôt OSTree signé (clé GPG) :
-      `flatpak build-export --gpg-sign=<KEY> repo/ <build>` puis `flatpak build-update-repo`.
-      La clé privée GPG vit dans un **secret GitHub Actions** ; la clé publique est distribuée
-      dans le `.flatpakrepo`.
-- [ ] **Publication sur GitHub Pages** : la CI pousse le dossier `repo/` sur la branche
-      `gh-pages` (ou un dépôt dédié `*-repo`). Pages sert le tout en HTTPS.
-- [ ] Générer `bigbrowser.flatpakrepo` (URL du repo + clé GPG publique, pour `flatpak remote-add`)
-      et un `.flatpakref` par Site (install en un clic depuis le navigateur).
-- [ ] Catalogue web statique (`/catalog`) listant les Sites (lecture des `site.yml`) :
-      titre, icône, résumé, screenshots, bouton "Installer" (`.flatpakref`) + commande CLI.
-- [ ] Doc utilisateur (cf. section 2).
+- [x] Générer le dépôt OSTree signé GPG (`publish.yml` : build dans `repo/` + `build-update-repo`).
+      Clé privée en **secret GitHub Actions** ; clé publique embarquée dans le `.flatpakrepo`.
+      *(Vérifié en réel : `GPGKey` présent dans le `.flatpakrepo` publié.)*
+- [x] **Publication sur GitHub Pages** : `publish.yml` déploie `_site` (catalogue + `repo/`) via
+      `deploy-pages`. Servi en HTTPS sur `https://tekkengreg.github.io/big-browser/`.
+- [x] Générer `bigbrowser.flatpakrepo` + un `.flatpakref` par Site (`tooling/catalog.py`).
+- [x] Catalogue web statique (`index.html` via `catalog.py`) : titre, icône, résumé, bouton
+      "Installer" (`.flatpakref`) + commande CLI. *(screenshots dans le metainfo, pas encore le catalogue)*
+- [x] Doc utilisateur (README racine : `remote-add` + `flatpak install`).
 - **Limites GitHub Pages** : ~1 Go de dépôt recommandé, 100 Go/mois de bande passante.
   Suffisant pour le MVP. Si dépassement :
   - bundles `.flatpak` volumineux → **GitHub Releases** (2 Go/fichier),

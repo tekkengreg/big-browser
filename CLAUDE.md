@@ -92,6 +92,12 @@ flatpak run io.bigbrowser.Wikipedia
 
 > En conteneur/CI, `flatpak-builder` requiert `--disable-rofiles-fuse` (déjà passé par le tooling).
 
+### Tests du tooling
+
+```sh
+python3 -m unittest discover -s tooling -p 'test_*.py' -v   # nécessite PyYAML
+```
+
 ### Lint des artefacts (ce que fait la CI)
 
 ```sh
@@ -102,8 +108,9 @@ appstreamcli validate --no-net dist/<id>/<id>.metainfo.xml
 
 ## CI/CD (GitHub Actions)
 
-- **`ci.yml`** (sur PR touchant `sites/`, `engine/`, `tooling/`) : matrice sur chaque Site →
-  validate + generate + lint + `flatpak-builder` **sans publication**. Garantit que tout compile.
+- **`ci.yml`** (sur PR touchant `sites/`, `engine/`, `tooling/`) : job `test` (unittest du tooling)
+  puis matrice sur chaque Site → validate + generate + lint + build + bundle `.flatpak` uploadé en
+  artefact **sans publication sur le Hub**. Garantit que tout compile et reste essayable.
 - **`publish.yml`** (sur push `main`, mêmes paths) : rebuilde **tous** les Sites dans un dépôt
   OSTree (signé GPG si les secrets `GPG_PRIVATE_KEY` / `GPG_KEY_ID` existent, sinon non signé avec
   avertissement), génère le catalogue, et déploie sur GitHub Pages. Le dépôt est **régénéré

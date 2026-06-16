@@ -1,8 +1,9 @@
 name: CI
 
 # Sur chaque Pull Request touchant les Sites, l'Engine ou le tooling :
-# valide les manifestes, génère les artefacts, lint AppStream/desktop, et builde
-# chaque Site (sans publier) pour garantir que tout compile.
+# teste le tooling, valide les manifestes, génère les artefacts, lint
+# AppStream/desktop, et builde chaque Site (bundle .flatpak téléchargeable, sans
+# publier sur le Hub) pour garantir que tout compile et reste essayable.
 
 on:
   pull_request:
@@ -14,6 +15,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer PyYAML
+        run: sudo apt-get update && sudo apt-get install -y python3-yaml
+      - name: Tests du tooling
+        run: python3 -m unittest discover -s tooling -p 'test_*.py' -v
+
   prepare:
     runs-on: ubuntu-latest
     outputs:
@@ -29,7 +39,7 @@ jobs:
           echo "Sites détectés : $sites"
 
   build:
-    needs: prepare
+    needs: [test, prepare]
     if: needs.prepare.outputs.sites != '[]'
     runs-on: ubuntu-latest
     strategy:
@@ -62,8 +72,20 @@ jobs:
           desktop-file-validate "dist/$id/$id.desktop"
           appstreamcli validate --no-net "dist/$id/$id.metainfo.xml"
 
-      - name: Build Flatpak (sans publication)
+      - name: Build Flatpak + bundle .flatpak (sans publication sur le Hub)
+        id: bundle
         run: |
           id=$(basename "${{ matrix.site }}")
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          # Build vers un dépôt OSTree local, puis empaquette un bundle mono-fichier.
           flatpak-builder --user --disable-rofiles-fuse --force-clean \
+            --repo="dist/$id/.repo" --default-branch=stable \
             "dist/$id/.build" "dist/$id/$id.yml"
+          flatpak build-bundle "dist/$id/.repo" "$id.flatpak" "$id" stable
+
+      - name: Publier le bundle de test sur la PR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.bundle.outputs.id }}.flatpak
+          path: ${{ steps.bundle.outputs.id }}.flatpak
+          if-no-files-found: error
