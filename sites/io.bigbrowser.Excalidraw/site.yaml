@@ -1,0 +1,29 @@
+# Manifeste de Site Big Browser — source unique.
+# Le tooling (tooling/bbhub.py) en dérive : flatpak manifest, metainfo, .desktop, site.json.
+
+# --- Requis ---
+id: io.bigbrowser.Excalidraw
+title: Excalidraw
+url: https://excalidraw.com
+icon: icon.svg
+summary: Le tableau blanc collaboratif au style dessiné à la main
+description: |
+  Excalidraw encapsulé par Big Browser : l'éditeur de schémas et de croquis
+  libre, dans sa propre fenêtre, avec son icône, son stockage isolé et sa place
+  dans le menu — comme une application native plutôt qu'un onglet de navigateur.
+project_license: MIT
+
+# --- Métadonnées catalogue (AppStream) ---
+developer_name: Big Browser
+homepage: https://excalidraw.com
+categories: [Graphics, 2DGraphics]
+keywords: [tableau blanc, schéma, croquis, diagramme]
+version: '1.0'
+date: '2026-06-23'
+
+# --- Comportement du Site ---
+allowed_domains: [excalidraw.com]
+permissions:
+  notifications: false
+  geolocation: false
+  media: false
