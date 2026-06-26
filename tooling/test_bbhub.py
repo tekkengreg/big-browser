@@ -21,7 +21,7 @@ import bbhub
 
 # Manifeste valide minimal (tous les champs requis).
 VALID = {
-    "id": "io.bigbrowser.TestSite",
+    "id": "com.tekkengreg.bigbrowser.TestSite",
     "title": "Test Site",
     "url": "https://example.com",
     "icon": "icon.svg",
@@ -69,10 +69,10 @@ class ValidateTests(unittest.TestCase):
         m = dict(VALID, id="com.example.App")
         # dossier nommé comme l'id pour isoler l'erreur de namespace
         site = make_site(self.tmp, m, dir_name="com.example.App")
-        self.assertTrue(any("io.bigbrowser." in e for e in bbhub.validate(site, m)))
+        self.assertTrue(any("com.tekkengreg.bigbrowser." in e for e in bbhub.validate(site, m)))
 
     def test_dossier_different_de_id(self):
-        site = make_site(self.tmp, VALID, dir_name="io.bigbrowser.Autre")
+        site = make_site(self.tmp, VALID, dir_name="com.tekkengreg.bigbrowser.Autre")
         errors = bbhub.validate(site, VALID)
         self.assertTrue(any("doit être nommé" in e for e in errors))
 

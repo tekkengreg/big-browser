@@ -1,6 +1,10 @@
 # Artefacts générés par le tooling
 /dist/
 
+# Logos officiels téléchargés (icons.py fetch) — le icon.svg cadré les embarque déjà
+sites/*/icon.src.*
+_site/
+
 # Caches flatpak-builder
 .flatpak-builder/
 .flatpak-build/

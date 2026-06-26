@@ -8,7 +8,7 @@ autonome, qui réutilise l'Engine partagé (`/engine/bigbrowser.js`).
 Un Site se résume à **deux fichiers** (le reste est généré par le tooling) :
 
 ```
-sites/io.bigbrowser.Wikipedia/
+sites/com.tekkengreg.bigbrowser.Wikipedia/
 ├── site.yaml     # manifeste source unique (cf. tooling/site.schema.json)
 └── icon.svg      # icône (svg ou png ≥256²)
 ```
@@ -29,9 +29,9 @@ Le manifeste flatpak-builder, le `metainfo.xml`, le `.desktop` et le `site.json`
 > `flatpak-builder` requis. En conteneur/CI, ajouter `--disable-rofiles-fuse` (déjà géré par le tooling).
 
 ```sh
-python3 tooling/bbhub.py validate sites/io.bigbrowser.Wikipedia
-python3 tooling/bbhub.py build    sites/io.bigbrowser.Wikipedia --install
-flatpak run io.bigbrowser.Wikipedia
+python3 tooling/bbhub.py validate sites/com.tekkengreg.bigbrowser.Wikipedia
+python3 tooling/bbhub.py build    sites/com.tekkengreg.bigbrowser.Wikipedia --install
+flatpak run com.tekkengreg.bigbrowser.Wikipedia
 ```
 
 ## Vérifications qualité (avant publication)

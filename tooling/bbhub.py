@@ -59,9 +59,9 @@ def validate(site_dir: Path, manifest: dict) -> list[str]:
 
     sid = manifest.get("id", "")
     if sid and not ID_RE.match(sid):
-        errors.append(f"id invalide '{sid}' : attendu un reverse-DNS (ex. io.bigbrowser.MonSite)")
-    if sid and not sid.startswith("io.bigbrowser."):
-        errors.append(f"id '{sid}' : doit commencer par 'io.bigbrowser.' (namespace du Hub)")
+        errors.append(f"id invalide '{sid}' : attendu un reverse-DNS (ex. com.tekkengreg.bigbrowser.MonSite)")
+    if sid and not sid.startswith("com.tekkengreg.bigbrowser."):
+        errors.append(f"id '{sid}' : doit commencer par 'com.tekkengreg.bigbrowser.' (namespace du Hub)")
     if sid and site_dir.name != sid:
         errors.append(f"le dossier '{site_dir.name}' doit être nommé exactement comme l'id '{sid}'")
 
@@ -225,7 +225,7 @@ def metainfo_xml(manifest: dict) -> str:
   </description>
   <launchable type="desktop-id">{sid}.desktop</launchable>
   <url type="homepage">{escape(homepage)}</url>
-  <developer id="io.bigbrowser">
+  <developer id="com.tekkengreg">
     <name>{escape(dev)}</name>
   </developer>
 {cat_block}{kw_block}{ss_block}  <icon type="stock">{sid}</icon>

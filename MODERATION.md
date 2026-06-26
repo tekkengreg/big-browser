@@ -12,8 +12,8 @@ page définit ce qui est **accepté**, **refusé**, et la **procédure** de revu
 
 Un Site est recevable s'il respecte **tout** ce qui suit :
 
-- **Namespace** : `id` sous `io.bigbrowser.*`, unique, et dossier nommé exactement comme l'`id`.
-  Le préfixe `io.bigbrowser.` évite d'usurper l'app-id de marque de l'éditeur.
+- **Namespace** : `id` sous `com.tekkengreg.bigbrowser.*`, unique, et dossier nommé exactement comme l'`id`.
+  Le préfixe `com.tekkengreg.bigbrowser.` évite d'usurper l'app-id de marque de l'éditeur.
 - **Transport** : `url` en `https://`.
 - **Licence** : `project_license` renseignée honnêtement — licence réelle de la webapp si connue,
   sinon `LicenseRef-proprietary`. Ne pas déclarer une licence ouverte par défaut.

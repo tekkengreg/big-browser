@@ -9,16 +9,16 @@ Pour ajouter un Site, voir CONTRIBUTING.md.
 
 ## Type de contribution
 
-- [ ] Nouveau Site (`sites/io.bigbrowser.*`)
+- [ ] Nouveau Site (`sites/com.tekkengreg.bigbrowser.*`)
 - [ ] Modification d'un Site existant
 - [ ] Cœur : Engine / tooling / CI
 - [ ] Documentation
 
 ## Checklist — nouveau Site / modification
 
-- [ ] Le dossier est `sites/io.bigbrowser.<Nom>/` et porte exactement l'`id` du `site.yaml`.
-- [ ] `python3 tooling/bbhub.py validate sites/io.bigbrowser.<Nom>` passe.
-- [ ] Testé en local : `bbhub.py build ... --install` puis `flatpak run io.bigbrowser.<Nom>`.
+- [ ] Le dossier est `sites/com.tekkengreg.bigbrowser.<Nom>/` et porte exactement l'`id` du `site.yaml`.
+- [ ] `python3 tooling/bbhub.py validate sites/com.tekkengreg.bigbrowser.<Nom>` passe.
+- [ ] Testé en local : `bbhub.py build ... --install` puis `flatpak run com.tekkengreg.bigbrowser.<Nom>`.
 - [ ] `url` en https:// ; `project_license` renseignée honnêtement.
 - [ ] Je n'ai modifié **que** `site.yaml` + l'icône (pas d'artefacts générés à la main).
 

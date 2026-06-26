@@ -1,0 +1,36 @@
+# Manifeste de Site Big Browser — source unique.
+# Le tooling (tooling/bbhub.py) en dérive : flatpak manifest, metainfo, .desktop, site.json.
+
+# --- Requis ---
+id: com.tekkengreg.bigbrowser.Spotify
+title: Spotify
+url: https://open.spotify.com
+icon: icon.svg
+icon_source: https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg
+summary: Le lecteur de musique en streaming, en application autonome
+description: |
+  Spotify encapsulé par Big Browser : le lecteur web de musique et de podcasts,
+  dans sa propre fenêtre, avec son icône, son stockage isolé et sa place dans le
+  menu — comme une application native plutôt qu'un onglet de navigateur.
+
+  Note : la lecture des titres protégés repose sur Widevine (DRM), absent du
+  runtime org.gnome.Platform ; l'interface et les aperçus restent accessibles.
+project_license: LicenseRef-proprietary
+
+# --- Métadonnées catalogue (AppStream) ---
+developer_name: Big Browser
+homepage: https://www.spotify.com
+categories: [AudioVideo, Audio]
+keywords: [musique, streaming, audio, podcast, playlist]
+version: '1.0'
+date: '2026-06-26'
+
+# --- Comportement du Site ---
+allowed_domains: [spotify.com, scdn.co]
+permissions:
+  notifications: false
+  geolocation: false
+  media: false
+# Sortie audio (PulseAudio) sans ouvrir l'accès caméra qu'implique `media: true`.
+finish_args_extra:
+  - --socket=pulseaudio

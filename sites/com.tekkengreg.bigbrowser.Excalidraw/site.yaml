@@ -2,10 +2,11 @@
 # Le tooling (tooling/bbhub.py) en dérive : flatpak manifest, metainfo, .desktop, site.json.
 
 # --- Requis ---
-id: io.bigbrowser.Excalidraw
+id: com.tekkengreg.bigbrowser.Excalidraw
 title: Excalidraw
 url: https://excalidraw.com
 icon: icon.svg
+icon_source: https://avatars.githubusercontent.com/u/59452120?s=256
 summary: Le tableau blanc collaboratif au style dessiné à la main
 description: |
   Excalidraw encapsulé par Big Browser : l'éditeur de schémas et de croquis

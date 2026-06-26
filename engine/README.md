@@ -32,7 +32,7 @@ BIGBROWSER_SITE=examples/excalidraw.site.json gjs engine/bigbrowser.js
 | Champ | Requis | Rôle |
 |-------|:------:|------|
 | `url` | ✅ | URL de la webapp à charger |
-| `id` | — | app-id (défaut : `io.bigbrowser.UnnamedSite`) ; isole cookies/stockage |
+| `id` | — | app-id (défaut : `com.tekkengreg.bigbrowser.UnnamedSite`) ; isole cookies/stockage |
 | `title` | — | titre de fenêtre (défaut : `id`) |
 | `icon` | — | nom de fichier icône (utilisé à l'empaquetage, pas au runtime) |
 | `allowed_domains` | — | domaines internes ; l'hôte de `url` est toujours ajouté. Hors liste → navigateur système |
