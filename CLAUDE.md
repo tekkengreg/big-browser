@@ -34,8 +34,13 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
   la logique de mapping permissions → `finish-args` (`media` → `--device=all --socket=pulseaudio`,
   `notifications` → `--talk-name=org.freedesktop.Notifications`) et qui produit le `site.json`
   runtime (sous-ensemble défini par `RUNTIME_KEYS`).
-- **`tooling/catalog.py`** — Génère le site web de découverte (`index.html`), le
+- **`tooling/catalog.py`** — Génère la page de bienvenue + catalogue (`index.html`), le
   `bigbrowser.flatpakrepo` et les `.flatpakref` par Site. N'est invoqué qu'en publication.
+- **`tooling/icons.py`** — Récupère le logo officiel (`fetch`, depuis le champ `icon_source`) et
+  l'enrobe dans le **cadre Big Browser** (`frame` : carte arrondie + contour violet `#6965db` +
+  pastille « BB ») pour produire le `icon.svg` commité. Sources SVG (imbriquées via `<svg>`) ou
+  bitmap (data-URI). Les `icon.src.*` téléchargés sont gitignorés. Outil de dev, **pas** appelé
+  par la CI : c'est le `icon.svg` commité qui est empaqueté.
 - **`tooling/site.schema.json`** — Schéma JSON de référence du `site.yaml` (autocomplétion +
   doc des champs). **La validation à l'exécution est faite à la main dans `bbhub.py:validate()`**,
   pas via jsonschema : tout nouveau champ requis doit être ajouté aux deux endroits.
@@ -49,7 +54,7 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
 
 ### Contraintes invariantes (validées par `bbhub.py`)
 
-- L'`id` doit être en reverse-DNS sous `io.bigbrowser.*` **et** le dossier `sites/<id>/` doit
+- L'`id` doit être en reverse-DNS sous `com.tekkengreg.bigbrowser.*` **et** le dossier `sites/<id>/` doit
   porter exactement ce nom.
 - `url` doit être en `https://`. L'hôte de `url` est **toujours** ajouté aux `allowed_domains`.
 - Périmètre de navigation : tout lien hors `allowed_domains` (et toute pop-up) s'ouvre dans le
@@ -84,13 +89,24 @@ WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 \
 ```sh
 python3 -m pip install -r tooling/requirements.txt           # PyYAML
 
-python3 tooling/bbhub.py validate sites/io.bigbrowser.Wikipedia
-python3 tooling/bbhub.py generate sites/io.bigbrowser.Wikipedia            # → dist/<id>/
-python3 tooling/bbhub.py build    sites/io.bigbrowser.Wikipedia --install  # nécessite flatpak-builder
-flatpak run io.bigbrowser.Wikipedia
+python3 tooling/bbhub.py validate sites/com.tekkengreg.bigbrowser.Wikipedia
+python3 tooling/bbhub.py generate sites/com.tekkengreg.bigbrowser.Wikipedia            # → dist/<id>/
+python3 tooling/bbhub.py build    sites/com.tekkengreg.bigbrowser.Wikipedia --install  # nécessite flatpak-builder
+flatpak run com.tekkengreg.bigbrowser.Wikipedia
 ```
 
 > En conteneur/CI, `flatpak-builder` requiert `--disable-rofiles-fuse` (déjà passé par le tooling).
+
+### Icônes : récupérer le logo officiel et le cadrer
+
+```sh
+python3 tooling/icons.py fetch sites/com.tekkengreg.bigbrowser.Spotify   # → icon.src.<ext>
+python3 tooling/icons.py frame sites/com.tekkengreg.bigbrowser.Spotify   # → icon.svg (cadré BB)
+python3 tooling/icons.py build --all                                     # fetch + frame sur tous
+```
+
+(Nécessite un champ `icon_source` dans le `site.yaml`. `frame --input logo.png` accepte aussi un
+fichier fourni à la main.)
 
 ### Tests du tooling
 

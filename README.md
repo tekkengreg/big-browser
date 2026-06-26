@@ -23,19 +23,19 @@ catalog/    (réservé)
 
 ```sh
 flatpak remote-add --if-not-exists bigbrowser https://<owner>.github.io/<repo>/bigbrowser.flatpakrepo
-flatpak install bigbrowser io.bigbrowser.Wikipedia
+flatpak install bigbrowser com.tekkengreg.bigbrowser.Wikipedia
 ```
 
 ## Contribuer un Site
 
-1. Créer `sites/io.bigbrowser.MonSite/` avec `site.yaml` + `icon.svg`
+1. Créer `sites/com.tekkengreg.bigbrowser.MonSite/` avec `site.yaml` + `icon.svg`
    (voir [`tooling/site.schema.json`](tooling/site.schema.json) et l'exemple Wikipédia).
 2. Valider et tester localement :
    ```sh
    python3 -m pip install -r tooling/requirements.txt
-   python3 tooling/bbhub.py validate sites/io.bigbrowser.MonSite
-   python3 tooling/bbhub.py build    sites/io.bigbrowser.MonSite --install
-   flatpak run io.bigbrowser.MonSite
+   python3 tooling/bbhub.py validate sites/com.tekkengreg.bigbrowser.MonSite
+   python3 tooling/bbhub.py build    sites/com.tekkengreg.bigbrowser.MonSite --install
+   flatpak run com.tekkengreg.bigbrowser.MonSite
    ```
 3. Ouvrir une Pull Request → la CI valide et builde automatiquement.
    Au merge sur `main`, le Site est publié sur le Hub.

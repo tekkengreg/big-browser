@@ -27,16 +27,17 @@
 |-------|------|
 | **Big Browser** | Le projet / la plateforme dans son ensemble |
 | **Site** | Unité de base : une webapp encapsulée, indépendante au niveau système |
-| **Engine** | Le moteur partagé (GJS/GTK4 + WebKitGTK 6.0) qui lit un manifeste et affiche un Site ; packagé en BaseApp `io.bigbrowser.Engine` |
+| **Engine** | Le moteur partagé (GJS/GTK4 + WebKitGTK 6.0) qui lit un manifeste et affiche un Site ; packagé en BaseApp `com.tekkengreg.bigbrowser.Engine` |
 | **Manifeste de Site** | `site.yml` décrivant un Site (URL, icône, titre, métadonnées AppStream) |
 | **Big Browser Hub** | Dépôt Flatpak (OSTree) + catalogue web de découverte |
 
 ### Conventions de nommage
-- Namespace projet : **`io.bigbrowser.*`** (à fixer selon le domaine/org GitHub possédé ;
-  repli possible : `io.github.<org>.*`).
-- Moteur (BaseApp) : **`io.bigbrowser.Engine`**.
-- Sites : **`io.bigbrowser.<NomDuSite>`** (ex. `io.bigbrowser.Wikipedia`). On enrobe des sites
-  tiers : préfixer sous le namespace Big Browser évite d'usurper l'identité de marque du vendeur.
+- Namespace projet : **`com.tekkengreg.bigbrowser.*`** (le domaine `bigbrowser.io` n'est pas
+  possédé ; on s'appuie sur le domaine inversé de l'auteur, `com.tekkengreg`).
+- Moteur (BaseApp) : **`com.tekkengreg.bigbrowser.Engine`**.
+- Sites : **`com.tekkengreg.bigbrowser.<NomDuSite>`** (ex. `com.tekkengreg.bigbrowser.Wikipedia`).
+  On enrobe des sites tiers : préfixer sous le namespace Big Browser évite d'usurper l'identité
+  de marque du vendeur (l'app-id reste celui de Big Browser, pas celui de l'éditeur).
 
 ---
 
@@ -77,7 +78,7 @@ HTTPS. Le mécanisme, identique à Flathub :
 3. L'utilisateur final n'a que deux commandes :
    ```sh
    flatpak remote-add --if-not-exists bigbrowser https://<user>.github.io/<repo>/bigbrowser.flatpakrepo
-   flatpak install bigbrowser io.bigbrowser.Wikipedia
+   flatpak install bigbrowser com.tekkengreg.bigbrowser.Wikipedia
    flatpak update            # les MAJ marchent comme sur Flathub
    ```
 
@@ -137,12 +138,12 @@ Généraliser `wikissb.js` pour qu'il ne soit plus codé en dur sur Wikipedia.
 - [x] (Option) injection de CSS/JS custom par Site (ex. masquer un bandeau).
 
 ### 3.2 Format & système de soumission d'un Site (`/sites`)
-Un dossier par Site : `sites/<io.bigbrowser.NomDuSite>/`.
+Un dossier par Site : `sites/<com.tekkengreg.bigbrowser.NomDuSite>/`.
 
 Manifeste minimal `site.yml` :
 ```yaml
 # Champs requis
-id: io.bigbrowser.MonSite        # ID reverse-DNS (= app-id Flatpak)
+id: com.tekkengreg.bigbrowser.MonSite        # ID reverse-DNS (= app-id Flatpak)
 title: Mon Site                  # nom affiché
 url: https://app.example.com     # URL de la webapp
 icon: icon.svg                   # fichier dans le dossier (svg ou png ≥256²)
@@ -172,7 +173,7 @@ permissions: { notifications: true, geolocation: false }
 ### 3.3 Tooling de build (`/tooling`)
 Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 
-- [x] `validate` : vérifie le manifeste (champs requis, id `io.bigbrowser.*` = nom du dossier,
+- [x] `validate` : vérifie le manifeste (champs requis, id `com.tekkengreg.bigbrowser.*` = nom du dossier,
       url https, icône). Validation à la main dans `bbhub.py`, schéma de référence à part.
 - [x] `generate` : produit pour chaque Site
   - `<id>.yml` (manifeste flatpak-builder : module Engine partagé + le `site.json`),
@@ -180,8 +181,13 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
   - `<id>.desktop` (Exec = Engine, Icon, Categories),
   - icône installée telle quelle (svg → scalable, png → 256²). *(pas de redimensionnement)*
 - [x] `build` : appelle `flatpak-builder` localement (`--install` ou `--repo`).
-- [x] Tests : `tooling/test_bbhub.py` (validate, finish_args, runtime json, generate) — 16 cas,
-      lancés en CI (job `test`).
+- [x] **Icônes officielles cadrées** (`tooling/icons.py`) : `fetch` télécharge le logo officiel
+      (champ `icon_source` du `site.yaml`), `frame` l'enrobe dans le **cadre Big Browser** (carte
+      arrondie + contour violet + pastille « BB ») et écrit `icon.svg`. Le cadre signale qu'il
+      s'agit d'un Site Big Browser, pas de l'app officielle. Gère les sources SVG (imbriquées)
+      et bitmap (data-URI). Les `icon.src.*` téléchargés sont gitignorés (le `icon.svg` les embarque).
+- [x] Tests : `tooling/test_bbhub.py` + `tooling/test_icons.py` (validate, finish_args, runtime
+      json, generate, cadrage SVG/bitmap) — 22 cas, lancés en CI (job `test`).
 
 ### 3.4 Système de build Flatpak (CI)
 - [x] Image/Action avec `flatpak`, `flatpak-builder`, runtimes `org.gnome.Platform//49` + SDK.
@@ -203,8 +209,11 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 - [x] **Publication sur GitHub Pages** : `publish.yml` déploie `_site` (catalogue + `repo/`) via
       `deploy-pages`. Servi en HTTPS sur `https://tekkengreg.github.io/big-browser/`.
 - [x] Générer `bigbrowser.flatpakrepo` + un `.flatpakref` par Site (`tooling/catalog.py`).
-- [x] Catalogue web statique (`index.html` via `catalog.py`) : titre, icône, résumé, bouton
-      "Installer" (`.flatpakref`) + commande CLI. *(screenshots dans le metainfo, pas encore le catalogue)*
+- [x] **Page de bienvenue + catalogue** (`index.html` via `catalog.py`) : hero « Big Browser »,
+      pitch, atouts (fenêtre dédiée, sandbox, install 1 clic, MAJ), démarrage en deux commandes,
+      puis grille des Sites (icône cadrée, résumé, bouton « Installer » `.flatpakref` + commande CLI).
+      Thème clair/sombre, lien « Code source » déduit de l'URL Pages.
+      *(screenshots dans le metainfo, pas encore affichés dans le catalogue)*
 - [x] Doc utilisateur (README racine : `remote-add` + `flatpak install`).
 - **Limites GitHub Pages** : ~1 Go de dépôt recommandé, 100 Go/mois de bande passante.
   Suffisant pour le MVP. Si dépassement :
@@ -217,7 +226,7 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 
 ### Phase 0 — Fondations (préparer le terrain)
 - [x] Initialiser le dépôt git, `README`, structure monorepo, `LICENSE` (MIT).
-- [x] Réserver le namespace `io.bigbrowser.*` et fixer l'URL Pages du Hub
+- [x] Réserver le namespace `com.tekkengreg.bigbrowser.*` et fixer l'URL Pages du Hub
       (`https://tekkengreg.github.io/big-browser/`).
 - [x] Identité tranchée : projet **Big Browser**, unité = **Site**, moteur = **Engine**.
 - [x] Stack Engine tranchée : **GTK4 + WebKitGTK 6.0**.
@@ -233,10 +242,10 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 - **✅ Jalon atteint : `gjs engine/bigbrowser.js examples/wikipedia.site.json` ouvre la webapp.**
 
 ### Phase 2 — Empaquetage Flatpak d'un Site (à la main)
-- [x] Manifeste flatpak-builder + module Engine partagé (`sites/io.bigbrowser.Wikipedia/`).
+- [x] Manifeste flatpak-builder + module Engine partagé (`sites/com.tekkengreg.bigbrowser.Wikipedia/`).
 - [x] metainfo.xml + .desktop + icône + `build.sh` écrits à la main.
 - [x] Build + install local validés (`--disable-rofiles-fuse` requis en conteneur/CI).
-- **✅ Jalon atteint : `flatpak run io.bigbrowser.Wikipedia` ouvre le Site empaqueté.**
+- **✅ Jalon atteint : `flatpak run com.tekkengreg.bigbrowser.Wikipedia` ouvre le Site empaqueté.**
 
 ### Phase 3 — Tooling de génération
 - [x] CLI `tooling/bbhub.py` : `validate` + `generate` + `build` à partir de `site.yaml`.
@@ -257,7 +266,7 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 ### Phase 5 — Hub & catalogue public
 - [x] Repo OSTree signé GPG hébergé, `bigbrowser.flatpakrepo` + `.flatpakref` par Site générés.
 - [x] Site catalogue statique (`index.html`) servi sur GitHub Pages.
-- [x] Install de bout en bout validée : `remote-add` + `flatpak install io.bigbrowser.Wikipedia`
+- [x] Install de bout en bout validée : `remote-add` + `flatpak install com.tekkengreg.bigbrowser.Wikipedia`
       depuis le Hub (~33 Ko, dédup OSTree confirmée) + lancement sans erreur.
 - **✅ Jalon atteint : un inconnu peut ajouter le remote et installer un Site en 1 clic.**
 
@@ -270,9 +279,17 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 
 ### Phase 7 — Durcissement & finitions (post-MVP)
 - [ ] Sandbox Flatpak au plus juste (réseau, pas d'accès FS hôte inutile).
-- [ ] Mises à jour automatiques d'icônes/métadonnées, versionnage des Sites.
+- [~] Mises à jour automatiques d'icônes/métadonnées, versionnage des Sites.
+      *(En partie : `tooling/icons.py fetch/frame` récupère et cadre les logos officiels ;
+      reste à automatiser le rafraîchissement périodique en CI.)*
 - [ ] Statistiques d'install, page de signalement, gestion des Sites obsolètes.
 - [ ] Migration vers flat-manager si le volume grandit.
+
+### Catalogue actuel des Sites
+- [x] `com.tekkengreg.bigbrowser.Wikipedia` — encyclopédie (logo globe officiel cadré).
+- [x] `com.tekkengreg.bigbrowser.Excalidraw` — tableau blanc collaboratif.
+- [x] `com.tekkengreg.bigbrowser.Spotify` — lecteur de musique (`https://open.spotify.com`,
+      audio via `--socket=pulseaudio` ; lecture des titres DRM/Widevine non couverte par le runtime).
 
 ---
 
@@ -282,11 +299,11 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
 |-------|--------|------------|
 | WebKit | Réécriture API GTK3→GTK4/WebKit6 | Faite une fois dans l'Engine (cf. note migration §2) |
 | Sandbox | Sites nécessitant notif/géoloc/persistance | Permissions Flatpak explicites + finish-args minimal |
-| Marques/légal | Icônes & noms de tiers redistribués | Namespace `io.bigbrowser.*` + politique de soumission/revue, licences claires |
+| Marques/légal | Icônes & noms de tiers redistribués | Namespace `com.tekkengreg.bigbrowser.*` (app-id Big Browser, pas celui de l'éditeur) + **icônes cadrées** d'une marque « BB » qui signale l'encapsulation + politique de soumission/revue, licences claires |
 | Signature repo | Clé GPG à protéger | Secret GitHub Actions, jamais en clair |
 | Taille du dépôt OSTree | Faible : Sites = métadonnées, dédup OSTree | Module Engine partagé + WebKit hors-repo ; Pages largement suffisant |
 | MAJ de l'Engine | Script copié au build → rebuild de tous les Sites | Rebuild matriciel automatisé en CI sur changement `/engine` |
-| Unicité des IDs | Collisions d'app-id | Validation CI (ID `io.bigbrowser.*` unique) |
+| Unicité des IDs | Collisions d'app-id | Validation CI (ID `com.tekkengreg.bigbrowser.*` unique) |
 
 ---
 

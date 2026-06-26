@@ -12,10 +12,10 @@ tooling. Vous n'éditez jamais les artefacts à la main.
 
 ### 1. Créer le dossier du Site
 
-Le dossier **doit** porter exactement l'`id` reverse-DNS sous le namespace `io.bigbrowser.*` :
+Le dossier **doit** porter exactement l'`id` reverse-DNS sous le namespace `com.tekkengreg.bigbrowser.*` :
 
 ```
-sites/io.bigbrowser.MonSite/
+sites/com.tekkengreg.bigbrowser.MonSite/
 ├── site.yaml     # manifeste source unique
 └── icon.svg      # icône (.svg, ou .png ≥ 256×256)
 ```
@@ -25,10 +25,10 @@ sites/io.bigbrowser.MonSite/
 Champs **requis** : `id`, `title`, `url`, `icon`, `summary`, `description`, `project_license`.
 Le schéma complet (champs optionnels, validation, autocomplétion) est dans
 [`tooling/site.schema.json`](tooling/site.schema.json). Exemple de référence :
-[`sites/io.bigbrowser.Wikipedia/site.yaml`](sites/io.bigbrowser.Wikipedia/site.yaml).
+[`sites/com.tekkengreg.bigbrowser.Wikipedia/site.yaml`](sites/com.tekkengreg.bigbrowser.Wikipedia/site.yaml).
 
 ```yaml
-id: io.bigbrowser.MonSite          # = nom du dossier, doit commencer par io.bigbrowser.
+id: com.tekkengreg.bigbrowser.MonSite          # = nom du dossier, doit commencer par com.tekkengreg.bigbrowser.
 title: Mon Site
 url: https://app.example.com       # https:// obligatoire
 icon: icon.svg
@@ -43,27 +43,33 @@ permissions: { notifications: false, geolocation: false, media: false }
 ```
 
 Quelques points qui font échouer la validation :
-- l'`id` ne commence pas par `io.bigbrowser.` ou le dossier ne porte pas le même nom ;
+- l'`id` ne commence pas par `com.tekkengreg.bigbrowser.` ou le dossier ne porte pas le même nom ;
 - `url` n'est pas en `https://` ;
 - l'icône référencée n'existe pas ou n'est pas `.svg`/`.png`.
 
 > **Périmètre & marques** : on enrobe des sites tiers, on ne les usurpe pas. Le préfixe
-> `io.bigbrowser.*` est obligatoire. Renseignez une `project_license` honnête (la licence de la
+> `com.tekkengreg.bigbrowser.*` est obligatoire. Renseignez une `project_license` honnête (la licence de la
 > webapp, pas la nôtre). Les critères d'acceptation et de refus sont détaillés dans
 > [`MODERATION.md`](MODERATION.md).
+
+> **Icône** : vous pouvez fournir un `icon.svg` à la main, ou renseigner `icon_source` (URL du
+> logo officiel) et laisser le tooling le cadrer aux couleurs Big Browser :
+> `python3 tooling/icons.py build sites/com.tekkengreg.bigbrowser.MonSite`. Le cadre (contour
+> violet + pastille « BB ») signale qu'il s'agit d'un Site Big Browser. Cf.
+> [`tooling/README.md`](tooling/README.md).
 
 ### 3. Valider et tester localement
 
 ```sh
 python3 -m pip install -r tooling/requirements.txt          # PyYAML
 
-python3 tooling/bbhub.py validate sites/io.bigbrowser.MonSite
-python3 tooling/bbhub.py build    sites/io.bigbrowser.MonSite --install
-flatpak run io.bigbrowser.MonSite
+python3 tooling/bbhub.py validate sites/com.tekkengreg.bigbrowser.MonSite
+python3 tooling/bbhub.py build    sites/com.tekkengreg.bigbrowser.MonSite --install
+flatpak run com.tekkengreg.bigbrowser.MonSite
 ```
 
 `build` nécessite `flatpak` + `flatpak-builder`. Pour juste inspecter les artefacts générés
-(sans build) : `python3 tooling/bbhub.py generate sites/io.bigbrowser.MonSite` → `dist/<id>/`.
+(sans build) : `python3 tooling/bbhub.py generate sites/com.tekkengreg.bigbrowser.MonSite` → `dist/<id>/`.
 
 Si l'Engine refuse un site valide avec une erreur TLS (`UNKNOWN_CA`), voir le contournement
 toolbox dans [`engine/README.md`](engine/README.md).

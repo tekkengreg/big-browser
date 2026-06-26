@@ -80,7 +80,7 @@ function loadManifest(argv) {
         printerr('Big Browser: le manifeste doit contenir au moins "url".');
         return null;
     }
-    manifest.id = manifest.id || 'io.bigbrowser.UnnamedSite';
+    manifest.id = manifest.id || 'com.tekkengreg.bigbrowser.UnnamedSite';
     manifest.title = manifest.title || manifest.id;
     manifest.permissions = manifest.permissions || {};
     return manifest;

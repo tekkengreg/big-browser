@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://bigbrowser.io/site.schema.json",
+  "$id": "https://tekkengreg.github.io/big-browser/site.schema.json",
   "title": "Big Browser — manifeste de Site",
   "description": "Source unique d'un Site (site.yaml). Le tooling en dérive les artefacts Flatpak.",
   "type": "object",
@@ -9,12 +9,17 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^io\\.bigbrowser\\.[A-Za-z][A-Za-z0-9_]*$",
-      "description": "App-id reverse-DNS sous le namespace du Hub (ex. io.bigbrowser.Wikipedia)."
+      "pattern": "^com\\.tekkengreg\\.bigbrowser\\.[A-Za-z][A-Za-z0-9_]*$",
+      "description": "App-id reverse-DNS sous le namespace du Hub (ex. com.tekkengreg.bigbrowser.Wikipedia)."
     },
     "title": { "type": "string", "minLength": 1 },
     "url": { "type": "string", "pattern": "^https://" },
     "icon": { "type": "string", "pattern": "\\.(svg|png)$" },
+    "icon_source": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL du logo officiel. `tooling/icons.py fetch` le télécharge, `frame` l'enrobe dans le cadre Big Browser → icon.svg."
+    },
     "summary": { "type": "string", "minLength": 1, "maxLength": 200 },
     "description": { "type": "string", "minLength": 1 },
     "project_license": { "type": "string", "description": "SPDX (ex. MIT) ou LicenseRef-proprietary." },
