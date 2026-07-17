@@ -291,11 +291,31 @@ def cmd_generate(args):
         print(f"    {f.name}")
 
 
+def flatpak_builder_cmd() -> list[str]:
+    """Localise flatpak-builder, avec repli pour les hôtes immuables (Silverblue).
+
+    Ordre : binaire natif → Flatpak `org.flatpak.Builder` → idem via
+    `flatpak-spawn --host` (cas toolbox, où seul l'hôte a flatpak).
+    """
+    if shutil.which("flatpak-builder"):
+        return ["flatpak-builder"]
+    for prefix in (["flatpak"], ["flatpak-spawn", "--host", "flatpak"]):
+        if not shutil.which(prefix[0]):
+            continue
+        probe = subprocess.run(prefix + ["info", "org.flatpak.Builder"],
+                               capture_output=True)
+        if probe.returncode == 0:
+            return prefix + ["run", "org.flatpak.Builder"]
+    raise SystemExit(
+        "✗ flatpak-builder introuvable. Installez-le (dnf install flatpak-builder) "
+        "ou installez le Flatpak : flatpak install flathub org.flatpak.Builder")
+
+
 def cmd_build(args):
     out = generate(Path(args.site_dir), Path(args.out))
     manifest = load_manifest(Path(args.site_dir))
     sid = manifest["id"]
-    cmd = ["flatpak-builder", "--force-clean", "--disable-rofiles-fuse"]
+    cmd = flatpak_builder_cmd() + ["--force-clean", "--disable-rofiles-fuse"]
     if args.install:
         cmd += ["--user", "--install"]
     if args.repo:

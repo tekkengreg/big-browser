@@ -57,8 +57,10 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
 - L'`id` doit être en reverse-DNS sous `com.tekkengreg.bigbrowser.*` **et** le dossier `sites/<id>/` doit
   porter exactement ce nom.
 - `url` doit être en `https://`. L'hôte de `url` est **toujours** ajouté aux `allowed_domains`.
-- Périmètre de navigation : tout lien hors `allowed_domains` (et toute pop-up) s'ouvre dans le
-  navigateur système via `Gtk.UriLauncher` ; le Site reste cantonné à ses domaines.
+- Périmètre de navigation : un **clic de lien** (non redirigé) hors `allowed_domains` s'ouvre dans
+  le navigateur système via `Gtk.UriLauncher` ; redirections, formulaires et iframes (captcha,
+  SSO…) restent dans la WebView. Pas de pop-up : les internes se chargent dans la même fenêtre,
+  les externes `http(s)` partent dehors, le reste (`about:blank`…) est refusé silencieusement.
 - Permissions refusées par défaut (notifications / geolocation / media).
 
 ## Commandes
