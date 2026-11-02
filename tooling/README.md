@@ -97,7 +97,11 @@ dist/com.tekkengreg.bigbrowser.Wikipedia/
 
 - **`finish-args`** déduits des permissions : `media` → `--device=all --socket=pulseaudio`,
   `notifications` → `--talk-name=org.freedesktop.Notifications`, plus `finish_args_extra`.
-- **`site.json`** = sous-ensemble runtime du manifeste (id, url, allowed_domains, permissions, …).
+- **`site.json`** = sous-ensemble runtime du manifeste (id, url, allowed_domains, languages,
+  permissions, …).
+- **`url` paramétrée par la langue** : `{lang}` / `{locale}` y sont laissés tels quels, c'est
+  l'Engine qui les substitue au lancement. Le gabarit n'étant pas une URL cliquable, `homepage`
+  devient requis — c'est lui qui alimente le lien « Page d'accueil » du metainfo.
 - **Métadonnées du store** injectées d'office : liens du Hub et du dépôt GitHub (`urls` les
   surcharge), contrôles `keyboard`/`pointing`/`touch` d'après `form_factors`, et `<branding>`
   dérivé de `brand_color`.

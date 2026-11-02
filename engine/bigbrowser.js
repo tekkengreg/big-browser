@@ -12,8 +12,13 @@
 // Schéma minimal du site.json :
 //   { "id", "title", "url", "icon",
 //     "allowed_domains": [...],
+//     "languages": [...],
 //     "permissions": { "notifications", "geolocation", "media" },
 //     "inject_css": "...", "inject_js": "..." }
+//
+// `url` peut être paramétrée par la langue (`https://{lang}.wikipedia.org`) :
+// voir resolveUrl(). Langue et thème suivent le système par défaut et sont
+// surchargeables depuis le menu de la fenêtre (préférences persistées par Site).
 
 // --- Choix du backend Gdk AVANT tout import GTK/WebKit ---
 const GLib = imports.gi.GLib;
@@ -41,8 +46,9 @@ if (GLib.getenv('WEBKIT_DISABLE_DMABUF_RENDERER') === null &&
 
 imports.gi.versions.Gdk = '4.0';
 imports.gi.versions.Gtk = '4.0';
+imports.gi.versions.Adw = '1';
 imports.gi.versions.WebKit = '6.0';
-const { Gio, Gdk, Gtk, WebKit } = imports.gi;
+const { Gio, Gdk, Gtk, Adw, WebKit } = imports.gi;
 
 // ---------------------------------------------------------------------------
 // Chargement du manifeste
@@ -124,55 +130,198 @@ function isWebUri(uri) {
     return /^https?:/i.test(uri || '');
 }
 
-function buildAllowedDomains(manifest) {
+// L'hôte de l'URL d'accueil *résolue* est toujours autorisé : avec une `url`
+// paramétrée par la langue, il change au fil des surcharges, d'où le recalcul.
+function buildAllowedDomains(manifest, homeUrl) {
     const list = Array.isArray(manifest.allowed_domains) ? manifest.allowed_domains.slice() : [];
-    // Toujours autoriser au moins l'hôte de l'URL principale.
-    const mainHost = hostOf(manifest.url);
+    const mainHost = hostOf(homeUrl);
     if (mainHost && !list.includes(mainHost))
         list.push(mainHost);
     return list;
 }
 
 // ---------------------------------------------------------------------------
-// Persistance de la géométrie de la fenêtre
+// Langues
+//
+// Un Site n'est pas dédié à une langue : par défaut il suit celle du système
+// (Accept-Language + navigator.language), surchargeable depuis le menu. Le jeu
+// de langues proposé vient du `languages` du manifeste, sinon de la liste
+// ci-dessous.
 // ---------------------------------------------------------------------------
 
-function stateFilePath(appId) {
-    return GLib.build_filenamev([GLib.get_user_data_dir(), 'bigbrowser', appId, 'window-state.json']);
+const LANGUAGE_NAMES = {
+    ar: 'العربية',
+    cs: 'Čeština',
+    de: 'Deutsch',
+    en: 'English',
+    es: 'Español',
+    fr: 'Français',
+    hi: 'हिन्दी',
+    it: 'Italiano',
+    ja: '日本語',
+    ko: '한국어',
+    nl: 'Nederlands',
+    pl: 'Polski',
+    pt: 'Português',
+    ru: 'Русский',
+    sv: 'Svenska',
+    tr: 'Türkçe',
+    uk: 'Українська',
+    zh: '中文',
+};
+
+// Sous-tag principal d'une étiquette BCP 47 : « fr-FR » → « fr ».
+function primarySubtag(tag) {
+    return String(tag || '').split('-')[0];
+}
+
+// Nom POSIX d'une locale → étiquette BCP 47 : « fr_FR.UTF-8@euro » → « fr-FR ».
+// La locale neutre (C/POSIX) ne désigne aucune langue : on la laisse tomber.
+function toBcp47(name) {
+    const base = String(name || '').split('.')[0].split('@')[0];
+    if (!base || base === 'C' || base === 'POSIX')
+        return '';
+    return base.replace(/_/g, '-');
+}
+
+// Langues du système, dans l'ordre de préférence ($LANGUAGE, $LC_ALL, $LANG…).
+function systemLanguages() {
+    const out = [];
+    for (const name of GLib.get_language_names()) {
+        const tag = toBcp47(name);
+        if (tag && !out.includes(tag))
+            out.push(tag);
+    }
+    return out.length ? out : ['en'];
+}
+
+// Liste Accept-Language effective : la surcharge d'abord (étiquette complète
+// puis forme courte), le système ensuite — un Site qui ne parle pas la langue
+// demandée retombe ainsi sur celle du bureau plutôt que sur son défaut à lui.
+function preferredLanguages(override) {
+    const list = [];
+    const push = (tag) => {
+        if (tag && !list.includes(tag))
+            list.push(tag);
+    };
+    push(override);
+    push(primarySubtag(override));
+    for (const tag of systemLanguages())
+        push(tag);
+    return list;
+}
+
+// Libellé d'une langue, en endonyme quand on le connaît. Une étiquette
+// régionale garde son code en clair : « Português (pt-BR) ».
+function languageLabel(code) {
+    const name = LANGUAGE_NAMES[code];
+    if (name)
+        return name;
+    const generic = LANGUAGE_NAMES[primarySubtag(code)];
+    return generic ? `${generic} (${code})` : code;
+}
+
+// Langues proposées au menu, triées par libellé.
+function offeredLanguages(manifest) {
+    const codes = Array.isArray(manifest.languages) && manifest.languages.length
+        ? manifest.languages.map(String)
+        : Object.keys(LANGUAGE_NAMES);
+    return [...new Set(codes)].sort((a, b) =>
+        languageLabel(a).localeCompare(languageLabel(b)));
+}
+
+// L'URL d'accueil peut être paramétrée par la langue : `{lang}` reçoit le
+// sous-tag principal (fr), `{locale}` l'étiquette complète (fr-FR). C'est ce
+// qui permet à un Site comme Wikipédia de suivre la langue du système sans
+// être figé sur une édition : `https://{lang}.wikipedia.org`.
+function resolveUrl(template, languages) {
+    const locale = languages[0] || 'en';
+    return String(template)
+        .replace(/\{locale\}/g, locale)
+        .replace(/\{lang\}/g, primarySubtag(locale));
+}
+
+// ---------------------------------------------------------------------------
+// Thème
+//
+// `Adw.StyleManager` pilote d'un coup le thème GTK *et* le `prefers-color-scheme`
+// vu par la page : WebKitGTK suit la clarté du thème GTK. DEFAULT = réglage du
+// bureau (portail org.freedesktop.appearance).
+// ---------------------------------------------------------------------------
+
+const COLOR_SCHEMES = {
+    system: Adw.ColorScheme.DEFAULT,
+    light: Adw.ColorScheme.FORCE_LIGHT,
+    dark: Adw.ColorScheme.FORCE_DARK,
+};
+
+const COLOR_SCHEME_LABELS = {
+    system: 'Système',
+    light: 'Clair',
+    dark: 'Sombre',
+};
+
+// ---------------------------------------------------------------------------
+// Persistance : géométrie de la fenêtre et préférences du Site
+// ---------------------------------------------------------------------------
+
+function stateDir(appId) {
+    return GLib.build_filenamev([GLib.get_user_data_dir(), 'bigbrowser', appId]);
+}
+
+function readJson(path, fallback) {
+    if (!GLib.file_test(path, GLib.FileTest.EXISTS))
+        return fallback;
+    try {
+        return Object.assign({}, fallback, JSON.parse(readFileText(path)));
+    } catch (_e) {
+        return fallback;
+    }
+}
+
+function writeJson(path, data, what) {
+    try {
+        const dir = Gio.File.new_for_path(path).get_parent();
+        try { dir.make_directory_with_parents(null); }
+        catch (_e) { /* existe déjà */ }
+        Gio.File.new_for_path(path).replace_contents(
+            JSON.stringify(data), null, false,
+            Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+    } catch (e) {
+        printerr(`Big Browser: échec sauvegarde ${what} : ${e.message}`);
+    }
 }
 
 function loadWindowState(appId) {
-    const path = stateFilePath(appId);
-    if (!GLib.file_test(path, GLib.FileTest.EXISTS))
-        return { width: 1024, height: 768 };
-    try {
-        return JSON.parse(readFileText(path));
-    } catch (_e) {
-        return { width: 1024, height: 768 };
-    }
+    return readJson(GLib.build_filenamev([stateDir(appId), 'window-state.json']),
+                    { width: 1024, height: 768 });
 }
 
 function saveWindowState(appId, width, height) {
-    const path = stateFilePath(appId);
-    try {
-        const dir = Gio.File.new_for_path(path).get_parent();
-        dir.make_directory_with_parents(null);
-    } catch (_e) { /* existe déjà */ }
-    try {
-        const file = Gio.File.new_for_path(path);
-        file.replace_contents(
-            JSON.stringify({ width, height }), null, false,
-            Gio.FileCreateFlags.REPLACE_DESTINATION, null);
-    } catch (e) {
-        printerr(`Big Browser: échec sauvegarde géométrie : ${e.message}`);
-    }
+    writeJson(GLib.build_filenamev([stateDir(appId), 'window-state.json']),
+              { width, height }, 'géométrie');
+}
+
+// Préférences de l'utilisateur : chaîne vide = « suivre le système ».
+function loadPrefs(appId) {
+    const prefs = readJson(GLib.build_filenamev([stateDir(appId), 'prefs.json']),
+                           { language: '', color_scheme: 'system' });
+    if (!(prefs.color_scheme in COLOR_SCHEMES))
+        prefs.color_scheme = 'system';
+    prefs.language = String(prefs.language || '');
+    return prefs;
+}
+
+function savePrefs(appId, prefs) {
+    writeJson(GLib.build_filenamev([stateDir(appId), 'prefs.json']),
+              prefs, 'préférences');
 }
 
 // ---------------------------------------------------------------------------
 // Construction de la WebView
 // ---------------------------------------------------------------------------
 
-function makeWebView(manifest) {
+function makeWebView(manifest, context) {
     // Session réseau isolée par app-id : cookies/stockage propres au Site.
     const base = GLib.build_filenamev([GLib.get_user_data_dir(), 'bigbrowser', manifest.id]);
     const cache = GLib.build_filenamev([GLib.get_user_cache_dir(), 'bigbrowser', manifest.id]);
@@ -211,6 +360,7 @@ function makeWebView(manifest) {
     }
 
     const webView = new WebKit.WebView({
+        web_context: context,
         network_session: session,
         user_content_manager: ucm,
     });
@@ -298,6 +448,41 @@ function hiddenContextActions() {
 }
 
 // ---------------------------------------------------------------------------
+// Menu principal : langue et thème, en groupes de boutons radio. Les deux
+// réglages ont une entrée « système » en tête, qui est l'état par défaut.
+// ---------------------------------------------------------------------------
+
+function radioItem(label, action, target) {
+    const item = Gio.MenuItem.new(label, null);
+    item.set_action_and_target_value(action, GLib.Variant.new_string(target));
+    return item;
+}
+
+function buildMainMenu(manifest) {
+    const languages = new Gio.Menu();
+    const systemSection = new Gio.Menu();
+    // Sous-tag seul dans le libellé : « Deutsch », pas « Deutsch (de-DE) ».
+    systemSection.append_item(radioItem(
+        `Langue du système (${languageLabel(primarySubtag(systemLanguages()[0]))})`,
+        'win.language', ''));
+    languages.append_section(null, systemSection);
+
+    const choices = new Gio.Menu();
+    for (const code of offeredLanguages(manifest))
+        choices.append_item(radioItem(languageLabel(code), 'win.language', code));
+    languages.append_section(null, choices);
+
+    const theme = new Gio.Menu();
+    for (const [key, label] of Object.entries(COLOR_SCHEME_LABELS))
+        theme.append_item(radioItem(label, 'win.color-scheme', key));
+
+    const menu = new Gio.Menu();
+    menu.append_submenu('_Langue', languages);
+    menu.append_submenu('_Thème', theme);
+    return menu;
+}
+
+// ---------------------------------------------------------------------------
 // Application
 // ---------------------------------------------------------------------------
 
@@ -306,29 +491,116 @@ function main(argv) {
     if (!manifest)
         return 1;
 
-    const allowed = buildAllowedDomains(manifest);
-    const app = new Gtk.Application({
+    const prefs = loadPrefs(manifest.id);
+    const app = new Adw.Application({
         application_id: manifest.id,
         flags: Gio.ApplicationFlags.FLAGS_NONE,
     });
 
+    // Contexte web propre au Site : c'est lui qui porte la liste Accept-Language.
+    const context = new WebKit.WebContext();
+
+    // Langue et URL d'accueil effectives. `languages`/`home`/`allowed` sont
+    // recalculés à chaque changement de langue (l'hôte d'accueil peut changer).
+    let languages = preferredLanguages(prefs.language);
+    let home = resolveUrl(manifest.url, languages);
+    let allowed = buildAllowedDomains(manifest, home);
+    context.set_preferred_languages(languages);
+
     app.connect('activate', () => {
+        // Après l'init GTK (donc pas avant `run`) : le gestionnaire de style a
+        // besoin du display pour suivre le réglage du bureau.
+        Adw.StyleManager.get_default().set_color_scheme(COLOR_SCHEMES[prefs.color_scheme]);
+
         const state = loadWindowState(manifest.id);
-        const win = new Gtk.ApplicationWindow({
+        const win = new Adw.ApplicationWindow({
             application: app,
             title: manifest.title,
             default_width: state.width,
             default_height: state.height,
         });
 
-        const webView = makeWebView(manifest);
-        win.set_child(webView);
+        const webView = makeWebView(manifest, context);
+
+        // --- Barre d'en-tête : retour de navigation + menu principal ---
+        const back = new Gtk.Button({
+            icon_name: 'go-previous-symbolic',
+            tooltip_text: 'Revenir à la page précédente',
+            sensitive: false,
+        });
+        back.connect('clicked', () => webView.go_back());
+
+        const menuButton = new Gtk.MenuButton({
+            icon_name: 'open-menu-symbolic',
+            tooltip_text: 'Menu principal',
+            primary: true,
+            menu_model: buildMainMenu(manifest),
+        });
+
+        // Titre de la page en ligne 1, nom du Site en sous-titre : le même
+        // texte dans les deux donnerait « Wikipédia — Wikipédia ».
+        const windowTitle = new Adw.WindowTitle({ title: manifest.title });
+        const header = new Adw.HeaderBar({ title_widget: windowTitle });
+        header.pack_start(back);
+        header.pack_end(menuButton);
+
+        const layout = new Adw.ToolbarView({ content: webView });
+        layout.add_top_bar(header);
+        win.set_content(layout);
 
         // Titre dynamique = <title> de la page (préfixé du nom du Site).
         webView.connect('notify::title', () => {
             const t = webView.title;
             win.title = t ? `${t} — ${manifest.title}` : manifest.title;
+            windowTitle.title = t || manifest.title;
+            windowTitle.subtitle = t ? manifest.title : '';
         });
+
+        // Le bouton retour suit l'historique de la WebView.
+        const syncBack = () => { back.sensitive = webView.can_go_back(); };
+        webView.get_back_forward_list().connect('changed', syncBack);
+        webView.connect('load-changed', syncBack);
+
+        // --- Actions du menu ---------------------------------------------
+
+        // Changement de langue : nouvelle liste Accept-Language, puis rechargement.
+        // Si l'URL d'accueil dépend de la langue (`{lang}`), l'hôte change : on
+        // repart de l'accueil plutôt que de recharger une page d'une autre édition.
+        const languageAction = Gio.SimpleAction.new_stateful(
+            'language', GLib.VariantType.new('s'),
+            GLib.Variant.new_string(prefs.language));
+        languageAction.connect('activate', (action, target) => {
+            const code = target.unpack();
+            action.set_state(GLib.Variant.new_string(code));
+            prefs.language = code;
+            savePrefs(manifest.id, prefs);
+
+            languages = preferredLanguages(code);
+            context.set_preferred_languages(languages);
+            const newHome = resolveUrl(manifest.url, languages);
+            const moved = newHome !== home;
+            home = newHome;
+            allowed = buildAllowedDomains(manifest, home);
+            if (moved)
+                webView.load_uri(home);
+            else
+                webView.reload();
+        });
+        win.add_action(languageAction);
+
+        const schemeAction = Gio.SimpleAction.new_stateful(
+            'color-scheme', GLib.VariantType.new('s'),
+            GLib.Variant.new_string(prefs.color_scheme));
+        schemeAction.connect('activate', (action, target) => {
+            const key = target.unpack();
+            if (!(key in COLOR_SCHEMES))
+                return;
+            action.set_state(GLib.Variant.new_string(key));
+            prefs.color_scheme = key;
+            savePrefs(manifest.id, prefs);
+            Adw.StyleManager.get_default().set_color_scheme(COLOR_SCHEMES[key]);
+        });
+        win.add_action(schemeAction);
 
         // Diagnostic TLS : si un certificat est refusé, on logge la cause exacte.
         // Cause la plus fréquente d'un refus sur un site valide : `glib-networking`
@@ -408,10 +680,16 @@ function main(argv) {
             return false; // false = afficher le menu (épuré)
         });
 
-        // Raccourcis : zoom (Ctrl +/-/0) et rechargement (F5, Ctrl+R).
+        // Raccourcis : retour (Alt+←, touche « Précédent » du clavier/souris),
+        // zoom (Ctrl +/-/0) et rechargement (F5, Ctrl+R).
         const keys = new Gtk.EventControllerKey();
         keys.connect('key-pressed', (_c, keyval, _code, mods) => {
             const ctrl = (mods & Gdk.ModifierType.CONTROL_MASK) !== 0;
+            const alt = (mods & Gdk.ModifierType.ALT_MASK) !== 0;
+            if ((alt && keyval === Gdk.KEY_Left) || keyval === Gdk.KEY_Back) {
+                if (webView.can_go_back()) webView.go_back();
+                return true;
+            }
             if (ctrl && (keyval === Gdk.KEY_plus || keyval === Gdk.KEY_equal)) {
                 webView.zoom_level += 0.1; return true;
             }
@@ -434,7 +712,7 @@ function main(argv) {
             return false;
         });
 
-        webView.load_uri(manifest.url);
+        webView.load_uri(home);
         win.present();
     });
 

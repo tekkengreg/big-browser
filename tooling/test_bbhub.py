@@ -81,6 +81,48 @@ class ValidateTests(unittest.TestCase):
         self.assertTrue(any("icône introuvable" in e for e in bbhub.validate(site, VALID)))
 
 
+class LanguagesTests(unittest.TestCase):
+    """`languages` (choix offert au menu) et `url` paramétrée par la langue."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_liste_valide(self):
+        m = dict(VALID, languages=["fr", "en", "pt-BR"])
+        site = make_site(self.tmp, m)
+        self.assertEqual(bbhub.validate(site, m), [])
+
+    def test_code_invalide(self):
+        m = dict(VALID, languages=["français"])
+        site = make_site(self.tmp, m)
+        self.assertTrue(any("BCP 47" in e for e in bbhub.validate(site, m)))
+
+    def test_liste_vide(self):
+        m = dict(VALID, languages=[])
+        site = make_site(self.tmp, m)
+        self.assertTrue(any("languages" in e for e in bbhub.validate(site, m)))
+
+    def test_url_parametree_exige_homepage(self):
+        m = dict(VALID, url="https://{lang}.wikipedia.org")
+        site = make_site(self.tmp, m)
+        self.assertTrue(any("homepage" in e for e in bbhub.validate(site, m)))
+
+    def test_url_parametree_avec_homepage(self):
+        m = dict(VALID, url="https://{lang}.wikipedia.org",
+                 homepage="https://www.wikipedia.org")
+        site = make_site(self.tmp, m)
+        self.assertEqual(bbhub.validate(site, m), [])
+
+    def test_homepage_remplace_le_gabarit_dans_le_metainfo(self):
+        m = dict(VALID, url="https://{locale}.example.com",
+                 homepage="https://example.com")
+        self.assertEqual(bbhub.appstream_urls(m)["homepage"], "https://example.com")
+
+
 class FinishArgsTests(unittest.TestCase):
     def test_base_inclut_telechargements(self):
         args = bbhub.finish_args(VALID)
@@ -308,12 +350,13 @@ class ScreenshotTests(unittest.TestCase):
 
 class RuntimeJsonTests(unittest.TestCase):
     def test_sous_ensemble_runtime(self):
-        m = dict(VALID, allowed_domains=["example.com"],
+        m = dict(VALID, allowed_domains=["example.com"], languages=["fr", "en"],
                  inject_js="x", developer_name="Moi", homepage="https://h")
         out = bbhub.runtime_site_json(m)
         # garde les clés runtime…
         self.assertEqual(out["id"], m["id"])
         self.assertEqual(out["allowed_domains"], ["example.com"])
+        self.assertEqual(out["languages"], ["fr", "en"])
         # …et écarte les métadonnées catalogue
         self.assertNotIn("developer_name", out)
         self.assertNotIn("homepage", out)

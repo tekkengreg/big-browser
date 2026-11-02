@@ -136,6 +136,13 @@ Généraliser `wikissb.js` pour qu'il ne soit plus codé en dur sur Wikipedia.
 - [x] Gestion : notifications, téléchargements, permissions (caméra/micro/géoloc) configurables.
 - [x] Zoom, raccourcis clavier de base, menu contextuel minimal.
 - [x] (Option) injection de CSS/JS custom par Site (ex. masquer un bandeau).
+- [x] Barre d'en-tête : bouton **Précédent** (+ `Alt+←`) et menu principal (`F10`).
+- [x] **Langue** : suit le système (`Accept-Language`, `navigator.language`), surchargeable au
+      menu ; `url` paramétrable par `{lang}` / `{locale}` pour les webapps dont l'édition dépend
+      de la langue (Wikipédia).
+- [x] **Thème** : Système / Clair / Sombre via `Adw.StyleManager`, qui pilote aussi le
+      `prefers-color-scheme` de la page.
+- [x] Préférences persistées par Site (`~/.local/share/bigbrowser/<id>/prefs.json`).
 
 ### 3.2 Format & système de soumission d'un Site (`/sites`)
 Un dossier par Site : `sites/<com.tekkengreg.bigbrowser.NomDuSite>/`.
@@ -162,6 +169,7 @@ keywords: [chat, mail]
 
 # Comportement du Site (optionnel)
 allowed_domains: [app.example.com, cdn.example.com]
+languages: [fr, en, de]          # choix offert au menu (défaut : liste de l'Engine)
 permissions: { notifications: true, geolocation: false }
 ```
 
