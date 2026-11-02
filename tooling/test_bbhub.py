@@ -108,6 +108,98 @@ class FinishArgsTests(unittest.TestCase):
         self.assertIn("--talk-name=org.example", args)
 
 
+class AppstreamUrlsTests(unittest.TestCase):
+    def test_homepage_par_defaut_sur_url(self):
+        urls = bbhub.appstream_urls(VALID)
+        self.assertEqual(urls["homepage"], VALID["url"])
+
+    def test_homepage_explicite_prioritaire(self):
+        urls = bbhub.appstream_urls(dict(VALID, homepage="https://example.org"))
+        self.assertEqual(urls["homepage"], "https://example.org")
+
+    def test_liens_du_hub_injectes(self):
+        urls = bbhub.appstream_urls(VALID)
+        for kind, value in bbhub.HUB_URLS.items():
+            self.assertEqual(urls[kind], value)
+
+    def test_surcharge_et_retrait(self):
+        m = dict(VALID, urls={"bugtracker": "https://example.com/bugs", "help": ""})
+        urls = bbhub.appstream_urls(m)
+        self.assertEqual(urls["bugtracker"], "https://example.com/bugs")
+        self.assertNotIn("help", urls)
+
+    def test_ordre_appstream(self):
+        urls = bbhub.appstream_urls(VALID)
+        self.assertEqual(list(urls), [k for k in bbhub.URL_KINDS if k in urls])
+
+    def test_type_inconnu_rejete(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, urls={"store": "https://example.com"})
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("store" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_url_non_http_rejetee(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, urls={"help": "example.com"})
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("urls.help" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+
+class HardwareRelationsTests(unittest.TestCase):
+    def test_defaut_adaptatif(self):
+        self.assertEqual(bbhub.hardware_relations(VALID),
+                         ["keyboard", "pointing", "touch"])
+
+    def test_desktop_seul(self):
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["desktop"])),
+            ["keyboard", "pointing"])
+
+    def test_mobile_seul(self):
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["mobile"])),
+            ["touch"])
+
+    def test_ordre_stable(self):
+        """L'ordre des contrôles ne dépend pas de celui du YAML."""
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["mobile", "desktop"])),
+            bbhub.hardware_relations(dict(VALID, form_factors=["desktop", "mobile"])))
+
+    def test_facteur_inconnu_rejete(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, form_factors=["tablet"])
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("tablet" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_liste_vide_rejetee(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, form_factors=[])
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("form_factors" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_metainfo_contient_les_relations(self):
+        xml = bbhub.metainfo_xml(VALID)
+        self.assertIn("<recommends>", xml)
+        self.assertIn("<control>touch</control>", xml)
+        # `display_length` est volontairement absent (cf. bbhub.FORM_FACTORS).
+        self.assertNotIn("display_length", xml)
+        xml_desktop = bbhub.metainfo_xml(dict(VALID, form_factors=["desktop"]))
+        self.assertNotIn("<control>touch</control>", xml_desktop)
+
+
 class RuntimeJsonTests(unittest.TestCase):
     def test_sous_ensemble_runtime(self):
         m = dict(VALID, allowed_domains=["example.com"],

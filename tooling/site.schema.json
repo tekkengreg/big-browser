@@ -25,6 +25,29 @@
     "project_license": { "type": "string", "description": "SPDX (ex. MIT) ou LicenseRef-proprietary." },
     "developer_name": { "type": "string" },
     "homepage": { "type": "string", "format": "uri" },
+    "urls": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Liens AppStream (section « Liens » de GNOME Logiciels). Par défaut : homepage = url de la webapp, et help/bugtracker/vcs-browser/contribute = le Big Browser Hub. Valeur vide = lien retiré.",
+      "properties": {
+        "homepage": { "type": "string" },
+        "help": { "type": "string" },
+        "bugtracker": { "type": "string" },
+        "faq": { "type": "string" },
+        "donation": { "type": "string" },
+        "translate": { "type": "string" },
+        "contact": { "type": "string" },
+        "vcs-browser": { "type": "string" },
+        "contribute": { "type": "string" }
+      }
+    },
+    "form_factors": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["desktop", "mobile"] },
+      "description": "Facteurs de forme supportés → `<recommends><control>` (vignette « Matériel » de GNOME Logiciels). Défaut : [desktop, mobile] → badge « Adaptatif ». [desktop] seul → « Ordinateur uniquement »."
+    },
     "categories": {
       "type": "array",
       "items": { "type": "string" },

@@ -33,6 +33,46 @@ RUNTIME_KEYS = ("id", "title", "url", "icon", "allowed_domains",
                 "permissions", "inject_css", "inject_js", "ignore_tls_errors")
 REQUIRED = ("id", "title", "url", "icon", "summary", "description", "project_license")
 
+# --- Liens du store (Big Browser Hub) -------------------------------------
+# Un Site n'est pas publié par l'éditeur de la webapp : son « projet », au sens
+# AppStream, c'est le Hub. On injecte donc d'office les liens du store dans le
+# metainfo. Côté GNOME Logiciels : `help` et `bugtracker` deviennent les lignes
+# « Aide » et « Signaler un problème » de la section « Liens », `contribute`
+# alimente le bouton « S'impliquer » de la vignette de licence (Sites libres
+# uniquement) ; `vcs-browser` est ignoré par GNOME Logiciels mais attendu par
+# les linters Flathub et d'autres stores.
+HUB_URL = "https://tekkengreg.github.io/big-browser"
+SOURCE_URL = "https://github.com/tekkengreg/big-browser"
+HUB_URLS = {
+    "help": HUB_URL,
+    "bugtracker": f"{SOURCE_URL}/issues",
+    "vcs-browser": SOURCE_URL,
+    "contribute": f"{SOURCE_URL}/blob/main/CONTRIBUTING.md",
+}
+# Types d'URL reconnus par AppStream, dans l'ordre où on les écrit.
+URL_KINDS = ("homepage", "help", "bugtracker", "faq", "donation",
+             "translate", "contact", "vcs-browser", "contribute")
+
+# --- Facteurs de forme (vignette « Matériel » de GNOME Logiciels) ---------
+# Un Site n'est qu'une WebView sans chrome propre : il suit la webapp, qui est
+# responsive la plupart du temps, et la fenêtre n'impose aucune taille minimale.
+# On déclare donc par défaut clavier + pointeur + tactile en `recommends` (qui
+# veut dire « supporte » côté AppStream) : c'est la combinaison exacte que
+# GNOME Logiciels exige pour afficher le badge vert « Adaptatif ». Sans aucune
+# de ces relations, il retombe sur son repli « Ordinateur uniquement ».
+#
+# Pas de `<requires><display_length>` : `appstreamcli compose` le dépouille de
+# ses attributs `compare`/`side` au passage dans le catalogue, et GNOME
+# Logiciels ne lit la valeur en pixels que si `side` est présent (le reste est
+# compilé hors build depuis AppStream 1.0). La relation ne peut donc plus rien
+# affirmer, tout en gardant le pouvoir de déclencher une vignette rouge si elle
+# ne correspond pas. Les `<control>` suffisent.
+FORM_FACTORS = ("desktop", "mobile")
+FORM_FACTOR_CONTROLS = {
+    "desktop": ("keyboard", "pointing"),
+    "mobile": ("touch",),
+}
+
 
 # --- Chargement & validation ----------------------------------------------
 
@@ -85,6 +125,28 @@ def validate(site_dir: Path, manifest: dict) -> list[str]:
     if cats and not isinstance(cats, list):
         errors.append("categories : doit être une liste")
 
+    factors = manifest.get("form_factors")
+    if factors is not None:
+        if not isinstance(factors, list) or not factors:
+            errors.append("form_factors : doit être une liste non vide "
+                          f"({', '.join(FORM_FACTORS)})")
+        else:
+            for factor in factors:
+                if factor not in FORM_FACTORS:
+                    errors.append(f"form_factors : '{factor}' inconnu "
+                                  f"(attendu : {', '.join(FORM_FACTORS)})")
+
+    urls = manifest.get("urls", {})
+    if urls and not isinstance(urls, dict):
+        errors.append("urls : doit être un mapping <type AppStream>: <url>")
+    elif urls:
+        for kind, value in urls.items():
+            if kind not in URL_KINDS:
+                errors.append(f"urls : type '{kind}' inconnu "
+                              f"(attendu : {', '.join(URL_KINDS)})")
+            elif value and not str(value).startswith(("http://", "https://")):
+                errors.append(f"urls.{kind} : doit être une URL http(s) ('{value}')")
+
     return errors
 
 
@@ -94,6 +156,35 @@ def runtime_site_json(manifest: dict) -> dict:
     out = {k: manifest[k] for k in RUNTIME_KEYS if k in manifest}
     out.setdefault("permissions", {})
     return out
+
+
+def appstream_urls(manifest: dict) -> dict[str, str]:
+    """Liens AppStream d'un Site : la webapp en `homepage`, le Hub pour le reste.
+
+    Le champ `urls` du site.yaml surcharge n'importe quelle entrée ; une valeur
+    vide retire le lien (ex. `urls: {help: ""}`).
+    """
+    urls = {"homepage": manifest.get("homepage") or manifest["url"]}
+    urls.update(HUB_URLS)
+    for kind, value in (manifest.get("urls") or {}).items():
+        if value:
+            urls[kind] = value
+        else:
+            urls.pop(kind, None)
+    return {k: urls[k] for k in URL_KINDS if urls.get(k)}
+
+
+def hardware_relations(manifest: dict) -> list[str]:
+    """Contrôles recommandés d'un Site, d'après `form_factors`."""
+    factors = manifest.get("form_factors") or list(FORM_FACTORS)
+    controls: list[str] = []
+    for factor in FORM_FACTORS:          # ordre stable, indépendant du YAML
+        if factor not in factors:
+            continue
+        for control in FORM_FACTOR_CONTROLS[factor]:
+            if control not in controls:
+                controls.append(control)
+    return controls
 
 
 def finish_args(manifest: dict) -> list[str]:
@@ -195,7 +286,14 @@ def metainfo_xml(manifest: dict) -> str:
         cat_block = f"  <categories>\n{items}\n  </categories>\n"
 
     dev = manifest.get("developer_name", "Big Browser")
-    homepage = manifest.get("homepage", manifest["url"])
+    url_block = "\n".join(f'  <url type="{kind}">{escape(value)}</url>'
+                          for kind, value in appstream_urls(manifest).items())
+
+    controls = hardware_relations(manifest)
+    hw_block = ""
+    if controls:
+        items = "\n".join(f"    <control>{c}</control>" for c in controls)
+        hw_block = f"  <recommends>\n{items}\n  </recommends>\n"
 
     screenshots = manifest.get("screenshots", []) or []
     ss_block = ""
@@ -224,8 +322,8 @@ def metainfo_xml(manifest: dict) -> str:
 {desc}
   </description>
   <launchable type="desktop-id">{sid}.desktop</launchable>
-  <url type="homepage">{escape(homepage)}</url>
-  <developer id="com.tekkengreg">
+{url_block}
+{hw_block}  <developer id="com.tekkengreg">
     <name>{escape(dev)}</name>
   </developer>
 {cat_block}{kw_block}{ss_block}  <icon type="stock">{sid}</icon>

@@ -26,6 +26,47 @@ flatpak remote-add --if-not-exists bigbrowser https://<owner>.github.io/<repo>/b
 flatpak install bigbrowser com.tekkengreg.bigbrowser.Wikipedia
 ```
 
+### Dans GNOME Logiciels
+
+Une fois le dépôt ajouté avec le `.flatpakrepo`, les Sites apparaissent dans
+**GNOME Logiciels** comme n'importe quelle application : recherche, catégories,
+fiche détaillée, mises à jour. Rien de spécifique n'est nécessaire — le dépôt
+OSTree publie un catalogue AppStream (ref `appstream2/<arch>`, produit par
+`flatpak build-update-repo`) avec les icônes rastérisées en 48/64/128 px.
+
+Ce qui alimente la fiche :
+
+| Élément de la fiche | Source |
+|---|---|
+| Nom, résumé, description, catégories, mots-clés | `site.yaml` → `metainfo.xml` |
+| Icône | `icon.svg` (cadré BB) |
+| Éditeur | `developer_name` |
+| Liens (site web, aide, bug, code source, contribuer) | `urls` + liens du Hub injectés par `bbhub.py` |
+| Permissions affichées (« Réseau », « Périphériques »…) | `finish-args` dérivés de `permissions` |
+| Vignette « Matériel » (« Adaptatif » / « Ordinateur uniquement ») | `form_factors` → `<recommends><control>` |
+| Dépôt d'origine (titre, logo, description) | `bigbrowser.flatpakrepo` |
+
+Un Site n'étant qu'une WebView sans taille minimale, il est déclaré
+**adaptatif** par défaut : clavier + pointeur + tactile en `recommends` — qui
+veut dire « supporte » au sens AppStream, un `requires` déclencherait au
+contraire une vignette rouge. GNOME Logiciels affiche alors la vignette verte
+« Adaptatif — Fonctionne sur téléphones, tablettes et ordinateurs » ; sans ces
+relations, il retombe sur son repli « Ordinateur uniquement ». Pour un Site dont
+la webapp n'est pas responsive :
+
+```yaml
+form_factors: [desktop]
+```
+
+> ⚠️ **Préférer le `.flatpakrepo` au `.flatpakref`.** Un `.flatpakref` (bouton
+> « Installer » du catalogue) réutilise le dépôt `bigbrowser` s'il est déjà
+> configuré ; sinon, grâce à `SuggestRemoteName`, flatpak propose de l'ajouter
+> sous ce nom — mais sans titre, logo ni description, car flatpak ne lit ces
+> champs que dans le groupe `[Flatpak Repo]` d'un `.flatpakrepo`. Si
+> l'utilisateur refuse, flatpak retombe sur un dépôt `<id>-origin` marqué
+> `xa.noenumerate=true` : le Site s'installe et se met à jour, mais **le reste du
+> catalogue reste invisible** dans GNOME Logiciels.
+
 ## Contribuer un Site
 
 1. Créer `sites/com.tekkengreg.bigbrowser.MonSite/` avec `site.yaml` + `icon.svg`

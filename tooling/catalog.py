@@ -4,6 +4,7 @@
 Produit dans le dossier de sortie (_site/) :
     index.html                     catalogue de découverte
     bigbrowser.flatpakrepo         pour `flatpak remote-add`
+    logo.svg                       logo du store (champ `Icon=` du .flatpakrepo)
     refs/<id>.flatpakref           install en 1 clic par Site
     icons/<id>.<ext>               icônes des Sites
 
@@ -26,6 +27,23 @@ import yaml
 
 BRANCH = "stable"
 RUNTIME_REPO = "https://flathub.org/repo/flathub.flatpakrepo"
+REMOTE_NAME = "bigbrowser"
+HUB_COMMENT = "Des webapps en applications autonomes"
+HUB_DESCRIPTION = (
+    "Le Big Browser Hub distribue des Sites : des webapps empaquetées en "
+    "applications autonomes, chacune avec sa fenêtre, son icône, sa sandbox "
+    "et son stockage isolé."
+)
+
+# Logo du store, servi à la racine du Hub et référencé par `Icon=` dans le
+# .flatpakrepo : c'est ce que GNOME Logiciels affiche en face du dépôt.
+LOGO_SVG = """<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#6965db"/>
+  <text x="128" y="128" font-family="sans-serif" font-size="104" font-weight="700"
+        fill="#ffffff" text-anchor="middle" dominant-baseline="central">BB</text>
+</svg>
+"""
 
 
 def load_sites(sites_dir: Path) -> list[dict]:
@@ -49,13 +67,20 @@ def gpg_key_b64(path: Path | None) -> str:
     return base64.b64encode(path.read_bytes()).decode("ascii")
 
 
+def write_logo(out: Path):
+    (out / "logo.svg").write_text(LOGO_SVG, encoding="utf-8")
+
+
 def write_flatpakrepo(out: Path, base_url: str, gpgb64: str):
     lines = [
         "[Flatpak Repo]",
         "Title=Big Browser Hub",
         f"Url={base_url}/repo",
         f"Homepage={base_url}",
-        "Comment=Des webapps en applications autonomes",
+        f"Comment={HUB_COMMENT}",
+        f"Description={HUB_DESCRIPTION}",
+        f"Icon={base_url}/logo.svg",
+        f"DefaultBranch={BRANCH}",
     ]
     if gpgb64:
         lines.append(f"GPGKey={gpgb64}")
@@ -64,6 +89,7 @@ def write_flatpakrepo(out: Path, base_url: str, gpgb64: str):
 
 def write_flatpakref(refs: Path, site: dict, base_url: str, gpgb64: str):
     sid = site["id"]
+    icon_ext = Path(site.get("icon", "icon.svg")).suffix
     lines = [
         "[Flatpak Ref]",
         f"Name={sid}",
@@ -72,6 +98,13 @@ def write_flatpakref(refs: Path, site: dict, base_url: str, gpgb64: str):
         f"Url={base_url}/repo",
         f"RuntimeRepo={RUNTIME_REPO}",
         "IsRuntime=false",
+        # Sans ce champ, l'install en 1 clic crée un remote
+        # `<id>-origin` : le Site s'installe mais le reste du catalogue
+        # reste invisible dans GNOME Logiciels.
+        f"SuggestRemoteName={REMOTE_NAME}",
+        f"Comment={site.get('summary', '')}",
+        f"Icon={base_url}/icons/{sid}{icon_ext}",
+        f"Homepage={base_url}",
     ]
     if gpgb64:
         lines.append(f"GPGKey={gpgb64}")
@@ -256,6 +289,7 @@ def main(argv=None):
     gpgb64 = gpg_key_b64(Path(args.gpg_key_file) if args.gpg_key_file else None)
     sites = load_sites(Path(args.sites))
 
+    write_logo(out)
     write_flatpakrepo(out, base_url, gpgb64)
     for s in sites:
         write_flatpakref(refs, s, base_url, gpgb64)
