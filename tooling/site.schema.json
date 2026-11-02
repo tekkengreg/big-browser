@@ -57,7 +57,25 @@
     "screenshots": {
       "type": "array",
       "items": { "type": "string", "format": "uri" },
-      "description": "URLs d'images (la 1re sert de capture par défaut)."
+      "description": "URLs d'images (la 1re sert de capture par défaut). Facultatif : les PNG de sites/<id>/screenshots/ sont trouvés tout seuls. Voir tooling/shot.js pour les produire."
+    },
+    "screenshot_caption": {
+      "type": "string",
+      "description": "Légende des captures (affichée sous le carrousel). Défaut : « <titre> dans sa fenêtre Big Browser »."
+    },
+    "brand_color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "Couleur de marque (#rrggbb) → `<branding>`. Les variantes claire/sombre en sont dérivées. Défaut : le violet Big Browser."
+    },
+    "content_rating": {
+      "type": "object",
+      "additionalProperties": { "enum": ["none", "mild", "moderate", "intense"] },
+      "description": "Attributs OARS 1.1 (ex. social-chat: intense). Par défaut aucun n'est déclaré, comme les navigateurs empaquetés."
+    },
+    "release_notes": {
+      "type": "string",
+      "description": "Nouveautés de la version courante → `<release><description>` (section « Nouveautés » de GNOME Logiciels)."
     },
     "version": { "type": "string" },
     "date": { "type": "string", "description": "Date de release ISO (YYYY-MM-DD)." },

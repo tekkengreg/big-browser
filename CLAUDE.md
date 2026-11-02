@@ -36,6 +36,10 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
   runtime (sous-ensemble défini par `RUNTIME_KEYS`).
 - **`tooling/catalog.py`** — Génère la page de bienvenue + catalogue (`index.html`), le
   `bigbrowser.flatpakrepo` et les `.flatpakref` par Site. N'est invoqué qu'en publication.
+- **`tooling/shot.js`** — Capture le PNG du carrousel AppStream (WebView GTK4, `gjs`). Les PNG
+  de `sites/<id>/screenshots/` sont auto-découverts par `generate` et publiés en URLs
+  `raw.githubusercontent.com` (le Hub n'est déployé qu'après le build, donc injoignable par
+  `appstreamcli compose`). Outil de dev, **pas** appelé par la CI.
 - **`tooling/icons.py`** — Récupère le logo officiel (`fetch`, depuis le champ `icon_source`) et
   l'enrobe dans le **cadre Big Browser** (`frame` : carte arrondie + contour violet `#6965db` +
   pastille « BB ») pour produire le `icon.svg` commité. Sources SVG (imbriquées via `<svg>`) ou

@@ -17,6 +17,7 @@ project_license: MIT
 # --- Métadonnées catalogue (AppStream) ---
 developer_name: Big Browser
 homepage: https://excalidraw.com
+brand_color: '#6965db'   # violet Excalidraw
 categories: [Graphics, 2DGraphics]
 keywords: [tableau blanc, schéma, croquis, diagramme]
 version: '1.0'

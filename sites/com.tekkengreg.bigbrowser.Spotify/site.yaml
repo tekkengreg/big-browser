@@ -20,6 +20,7 @@ project_license: LicenseRef-proprietary
 # --- Métadonnées catalogue (AppStream) ---
 developer_name: Big Browser
 homepage: https://www.spotify.com
+brand_color: '#1db954'   # vert Spotify
 categories: [AudioVideo, Audio]
 keywords: [musique, streaming, audio, podcast, playlist]
 version: '1.0'

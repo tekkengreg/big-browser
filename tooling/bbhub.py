@@ -73,6 +73,34 @@ FORM_FACTOR_CONTROLS = {
     "mobile": ("touch",),
 }
 
+# --- Couleur de marque ------------------------------------------------------
+# GNOME Logiciels lit `<branding>` (gs-appstream.c) et s'en sert pour teinter la
+# grande tuile de mise en avant ; sans elle il devine une couleur depuis
+# l'icône, ce qui donnerait le même violet à tous les Sites (toutes nos icônes
+# partagent le cadre BB). Un seul hex suffit dans le site.yaml : les deux
+# variantes clair/sombre en sont dérivées, la couleur étant affichée *derrière*
+# l'icône et devant donc s'en distinguer.
+DEFAULT_BRAND_COLOR = "#6965db"          # violet Big Browser
+BRAND_LIGHTEN = 0.25                     # part de blanc, variante claire
+BRAND_DARKEN = 0.45                      # part de noir, variante sombre
+HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+# --- Classement d'âge -------------------------------------------------------
+# Valeurs OARS 1.1. Par défaut on n'affirme rien (`<content_rating>` vide), ce
+# que font aussi les vrais navigateurs empaquetés : un Site n'a pas de contenu
+# propre, il affiche celui de la webapp.
+OARS_VALUES = ("none", "mild", "moderate", "intense")
+
+# --- Captures d'écran -------------------------------------------------------
+# Les PNG commités dans `sites/<id>/screenshots/` sont servis par
+# raw.githubusercontent.com, et non par le Hub : `appstreamcli compose`
+# télécharge chaque image au build pour en relever les dimensions, or le Hub
+# n'est déployé qu'*après* le build (GitHub Pages publie en fin de workflow).
+# Vérifié : une URL distante traverse le compose intacte, enrichie de
+# `width`/`height`.
+SCREENSHOT_BASE = "https://raw.githubusercontent.com/tekkengreg/big-browser/main"
+SCREENSHOT_SUFFIXES = (".png", ".jpg", ".jpeg")
+
 
 # --- Chargement & validation ----------------------------------------------
 
@@ -125,6 +153,28 @@ def validate(site_dir: Path, manifest: dict) -> list[str]:
     if cats and not isinstance(cats, list):
         errors.append("categories : doit être une liste")
 
+    shots = manifest.get("screenshots", [])
+    if shots and not isinstance(shots, list):
+        errors.append("screenshots : doit être une liste d'URLs")
+    elif shots:
+        for shot in shots:
+            if not str(shot).startswith(("http://", "https://")):
+                errors.append(f"screenshots : '{shot}' doit être une URL http(s) "
+                              "(les PNG de sites/<id>/screenshots/ sont trouvés seuls)")
+
+    brand = manifest.get("brand_color")
+    if brand and not HEX_COLOR_RE.match(str(brand)):
+        errors.append(f"brand_color '{brand}' : attendu un hex #rrggbb")
+
+    rating = manifest.get("content_rating", {})
+    if rating and not isinstance(rating, dict):
+        errors.append("content_rating : doit être un mapping <attribut OARS>: <valeur>")
+    elif rating:
+        for attr, value in rating.items():
+            if value not in OARS_VALUES:
+                errors.append(f"content_rating.{attr} : valeur '{value}' invalide "
+                              f"(attendu : {', '.join(OARS_VALUES)})")
+
     factors = manifest.get("form_factors")
     if factors is not None:
         if not isinstance(factors, list) or not factors:
@@ -172,6 +222,32 @@ def appstream_urls(manifest: dict) -> dict[str, str]:
         else:
             urls.pop(kind, None)
     return {k: urls[k] for k in URL_KINDS if urls.get(k)}
+
+
+def screenshot_urls(site_dir: Path, manifest: dict) -> list[str]:
+    """URLs des captures : `screenshots` du site.yaml, sinon auto-découverte."""
+    explicit = manifest.get("screenshots") or []
+    if explicit:
+        return [str(u) for u in explicit]
+    shots = site_dir / "screenshots"
+    if not shots.is_dir():
+        return []
+    names = sorted(f.name for f in shots.iterdir()
+                   if f.suffix.lower() in SCREENSHOT_SUFFIXES)
+    return [f"{SCREENSHOT_BASE}/sites/{manifest['id']}/screenshots/{n}" for n in names]
+
+
+def _mix(color: str, target: int, ratio: float) -> str:
+    """Mélange `color` (#rrggbb) vers `target` (0 = noir, 255 = blanc)."""
+    channels = (int(color[i:i + 2], 16) for i in (1, 3, 5))
+    return "#" + "".join(
+        f"{round(c + (target - c) * ratio):02x}" for c in channels)
+
+
+def brand_colors(manifest: dict) -> tuple[str, str]:
+    """(variante claire, variante sombre) dérivées de `brand_color`."""
+    base = manifest.get("brand_color") or DEFAULT_BRAND_COLOR
+    return (_mix(base, 255, BRAND_LIGHTEN), _mix(base, 0, BRAND_DARKEN))
 
 
 def hardware_relations(manifest: dict) -> list[str]:
@@ -289,6 +365,34 @@ def metainfo_xml(manifest: dict) -> str:
     url_block = "\n".join(f'  <url type="{kind}">{escape(value)}</url>'
                           for kind, value in appstream_urls(manifest).items())
 
+    light, dark = brand_colors(manifest)
+    branding_block = (
+        '  <branding>\n'
+        f'    <color type="primary" scheme_preference="light">{light}</color>\n'
+        f'    <color type="primary" scheme_preference="dark">{dark}</color>\n'
+        '  </branding>\n')
+
+    rating = manifest.get("content_rating") or {}
+    if rating:
+        items = "\n".join(
+            f'    <content_attribute id="{escape(attr)}">{escape(value)}</content_attribute>'
+            for attr, value in sorted(rating.items()))
+        rating_block = f'  <content_rating type="oars-1.1">\n{items}\n  </content_rating>\n'
+    else:
+        rating_block = '  <content_rating type="oars-1.1"/>\n'
+
+    notes = str(manifest.get("release_notes", "") or "").strip()
+    release_attrs = (f'version="{escape(str(manifest.get("version", "1.0")))}" '
+                     f'date="{manifest.get("date", "2026-01-01")}"')
+    if notes:
+        paras = "\n".join(f"        <p>{escape(n.strip())}</p>"
+                           for n in notes.split("\n\n") if n.strip())
+        release_block = (f'    <release {release_attrs}>\n'
+                         f'      <description>\n{paras}\n      </description>\n'
+                         '    </release>\n')
+    else:
+        release_block = f'    <release {release_attrs}/>\n'
+
     controls = hardware_relations(manifest)
     hw_block = ""
     if controls:
@@ -298,8 +402,13 @@ def metainfo_xml(manifest: dict) -> str:
     screenshots = manifest.get("screenshots", []) or []
     ss_block = ""
     if screenshots:
+        # GNOME Logiciels affiche la légende sous le carrousel ; sans elle
+        # `appstreamcli validate --pedantic` signale `screenshot-no-caption`.
+        caption = escape(manifest.get(
+            "screenshot_caption", f"{manifest['title']} dans sa fenêtre Big Browser"))
         imgs = "\n".join(
             f"    <screenshot{' type=\"default\"' if i == 0 else ''}>\n"
+            f"      <caption>{caption}</caption>\n"
             f"      <image>{escape(s)}</image>\n    </screenshot>"
             for i, s in enumerate(screenshots)
         )
@@ -327,10 +436,8 @@ def metainfo_xml(manifest: dict) -> str:
     <name>{escape(dev)}</name>
   </developer>
 {cat_block}{kw_block}{ss_block}  <icon type="stock">{sid}</icon>
-  <content_rating type="oars-1.1"/>
-  <releases>
-    <release version="{escape(str(manifest.get('version', '1.0')))}" date="{manifest.get('date', '2026-01-01')}"/>
-  </releases>
+{branding_block}{rating_block}  <releases>
+{release_block}  </releases>
 </component>
 """
 
@@ -346,6 +453,10 @@ def generate(site_dir: Path, out_root: Path) -> Path:
     sid = manifest["id"]
     out = out_root / sid
     out.mkdir(parents=True, exist_ok=True)
+
+    # Captures auto-découvertes dans sites/<id>/screenshots/ si le site.yaml
+    # n'en liste pas explicitement.
+    manifest["screenshots"] = screenshot_urls(site_dir, manifest)
 
     # site.json (runtime)
     import json

@@ -181,6 +181,13 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
   - `<id>.desktop` (Exec = Engine, Icon, Categories),
   - icône installée telle quelle (svg → scalable, png → 256²). *(pas de redimensionnement)*
 - [x] `build` : appelle `flatpak-builder` localement (`--install` ou `--repo`).
+- [x] **Captures d'écran** (`tooling/shot.js`) : charge l'URL du Site dans une WebView GTK4 et
+      enregistre un PNG (conscient du facteur d'échelle HiDPI, fenêtre non décorée). Les PNG de
+      `sites/<id>/screenshots/` sont auto-découverts par `generate` et publiés en URLs
+      `raw.githubusercontent.com` — le Hub n'est déployé qu'après le build, donc injoignable par
+      `appstreamcli compose`, qui télécharge chaque image pour en relever les dimensions.
+      *(Limite : les webapps à bandeau de consentement ou mur de connexion — Spotify — ne se
+      capturent pas utilement ; on ne commite alors rien et le carrousel est masqué.)*
 - [x] **Icônes officielles cadrées** (`tooling/icons.py`) : `fetch` télécharge le logo officiel
       (champ `icon_source` du `site.yaml`), `frame` l'enrobe dans le **cadre Big Browser** (carte
       arrondie + contour violet + pastille « BB ») et écrit `icon.svg`. Le cadre signale qu'il
@@ -213,7 +220,8 @@ Un CLI (Node ou Python) qui transforme un `site.yml` en artefacts Flatpak.
       pitch, atouts (fenêtre dédiée, sandbox, install 1 clic, MAJ), démarrage en deux commandes,
       puis grille des Sites (icône cadrée, résumé, bouton « Installer » `.flatpakref` + commande CLI).
       Thème clair/sombre, lien « Code source » déduit de l'URL Pages.
-      *(screenshots dans le metainfo, pas encore affichés dans le catalogue)*
+      *(les captures alimentent la fiche GNOME Logiciels ; le catalogue web ne les affiche
+      toujours pas)*
 - [x] Doc utilisateur (README racine : `remote-add` + `flatpak install`).
 - **Limites GitHub Pages** : ~1 Go de dépôt recommandé, 100 Go/mois de bande passante.
   Suffisant pour le MVP. Si dépassement :

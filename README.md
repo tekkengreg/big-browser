@@ -40,6 +40,10 @@ Ce qui alimente la fiche :
 |---|---|
 | Nom, résumé, description, catégories, mots-clés | `site.yaml` → `metainfo.xml` |
 | Icône | `icon.svg` (cadré BB) |
+| Carrousel de captures | PNG de `sites/<id>/screenshots/` (cf. `tooling/shot.js`) |
+| Teinte de la tuile de mise en avant | `brand_color` → `<branding>` |
+| Classement d'âge | `content_rating` (vide par défaut, comme les navigateurs empaquetés) |
+| « Nouveautés » | `release_notes` |
 | Éditeur | `developer_name` |
 | Liens (site web, aide, bug, code source, contribuer) | `urls` + liens du Hub injectés par `bbhub.py` |
 | Permissions affichées (« Réseau », « Périphériques »…) | `finish-args` dérivés de `permissions` |
