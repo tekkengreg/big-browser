@@ -108,6 +108,204 @@ class FinishArgsTests(unittest.TestCase):
         self.assertIn("--talk-name=org.example", args)
 
 
+class AppstreamUrlsTests(unittest.TestCase):
+    def test_homepage_par_defaut_sur_url(self):
+        urls = bbhub.appstream_urls(VALID)
+        self.assertEqual(urls["homepage"], VALID["url"])
+
+    def test_homepage_explicite_prioritaire(self):
+        urls = bbhub.appstream_urls(dict(VALID, homepage="https://example.org"))
+        self.assertEqual(urls["homepage"], "https://example.org")
+
+    def test_liens_du_hub_injectes(self):
+        urls = bbhub.appstream_urls(VALID)
+        for kind, value in bbhub.HUB_URLS.items():
+            self.assertEqual(urls[kind], value)
+
+    def test_surcharge_et_retrait(self):
+        m = dict(VALID, urls={"bugtracker": "https://example.com/bugs", "help": ""})
+        urls = bbhub.appstream_urls(m)
+        self.assertEqual(urls["bugtracker"], "https://example.com/bugs")
+        self.assertNotIn("help", urls)
+
+    def test_ordre_appstream(self):
+        urls = bbhub.appstream_urls(VALID)
+        self.assertEqual(list(urls), [k for k in bbhub.URL_KINDS if k in urls])
+
+    def test_type_inconnu_rejete(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, urls={"store": "https://example.com"})
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("store" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_url_non_http_rejetee(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, urls={"help": "example.com"})
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("urls.help" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+
+class HardwareRelationsTests(unittest.TestCase):
+    def test_defaut_adaptatif(self):
+        self.assertEqual(bbhub.hardware_relations(VALID),
+                         ["keyboard", "pointing", "touch"])
+
+    def test_desktop_seul(self):
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["desktop"])),
+            ["keyboard", "pointing"])
+
+    def test_mobile_seul(self):
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["mobile"])),
+            ["touch"])
+
+    def test_ordre_stable(self):
+        """L'ordre des contrôles ne dépend pas de celui du YAML."""
+        self.assertEqual(
+            bbhub.hardware_relations(dict(VALID, form_factors=["mobile", "desktop"])),
+            bbhub.hardware_relations(dict(VALID, form_factors=["desktop", "mobile"])))
+
+    def test_facteur_inconnu_rejete(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, form_factors=["tablet"])
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("tablet" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_liste_vide_rejetee(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, form_factors=[])
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("form_factors" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_metainfo_contient_les_relations(self):
+        xml = bbhub.metainfo_xml(VALID)
+        self.assertIn("<recommends>", xml)
+        self.assertIn("<control>touch</control>", xml)
+        # `display_length` est volontairement absent (cf. bbhub.FORM_FACTORS).
+        self.assertNotIn("display_length", xml)
+        xml_desktop = bbhub.metainfo_xml(dict(VALID, form_factors=["desktop"]))
+        self.assertNotIn("<control>touch</control>", xml_desktop)
+
+
+class BrandingTests(unittest.TestCase):
+    def test_defaut_violet_big_browser(self):
+        light, dark = bbhub.brand_colors(VALID)
+        self.assertNotEqual(light, dark)
+        # La variante claire tire vers le blanc, la sombre vers le noir.
+        self.assertGreater(int(light[1:3], 16), int(dark[1:3], 16))
+
+    def test_couleur_declaree(self):
+        light, dark = bbhub.brand_colors(dict(VALID, brand_color="#1db954"))
+        self.assertEqual((light, dark), ("#56ca7f", "#10662e"))
+
+    def test_noir_et_blanc_restent_dans_les_bornes(self):
+        self.assertEqual(bbhub.brand_colors(dict(VALID, brand_color="#000000")),
+                         ("#404040", "#000000"))
+        self.assertEqual(bbhub.brand_colors(dict(VALID, brand_color="#ffffff")),
+                         ("#ffffff", "#8c8c8c"))
+
+    def test_hex_invalide_rejete(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, brand_color="rouge")
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("brand_color" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+    def test_metainfo_contient_branding(self):
+        xml = bbhub.metainfo_xml(dict(VALID, brand_color="#1db954"))
+        self.assertIn('<color type="primary" scheme_preference="light">#56ca7f</color>', xml)
+        self.assertIn('<color type="primary" scheme_preference="dark">#10662e</color>', xml)
+
+
+class ContentRatingTests(unittest.TestCase):
+    def test_vide_par_defaut(self):
+        self.assertIn('<content_rating type="oars-1.1"/>', bbhub.metainfo_xml(VALID))
+
+    def test_attributs_declares(self):
+        xml = bbhub.metainfo_xml(dict(VALID, content_rating={"social-chat": "intense"}))
+        self.assertIn('<content_attribute id="social-chat">intense</content_attribute>', xml)
+
+    def test_valeur_oars_invalide_rejetee(self):
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            m = dict(VALID, content_rating={"social-chat": "beaucoup"})
+            site = make_site(Path(tmp.name), m)
+            self.assertTrue(any("content_rating" in e for e in bbhub.validate(site, m)))
+        finally:
+            tmp.cleanup()
+
+
+class ReleaseNotesTests(unittest.TestCase):
+    def test_sans_notes_release_vide(self):
+        self.assertIn("<release version=", bbhub.metainfo_xml(VALID))
+        self.assertNotIn("<description>\n        <p>", bbhub.metainfo_xml(VALID))
+
+    def test_avec_notes(self):
+        xml = bbhub.metainfo_xml(dict(VALID, release_notes="Un.\n\nDeux."))
+        self.assertIn("<p>Un.</p>", xml)
+        self.assertIn("<p>Deux.</p>", xml)
+
+
+class ScreenshotTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_auto_decouverte_triee(self):
+        site = make_site(self.tmp, VALID)
+        shots = site / "screenshots"
+        shots.mkdir()
+        for name in ("2.png", "1.png", "notes.txt"):
+            (shots / name).write_text("x", encoding="utf-8")
+        urls = bbhub.screenshot_urls(site, VALID)
+        self.assertEqual(len(urls), 2)
+        self.assertTrue(urls[0].endswith(f"/sites/{VALID['id']}/screenshots/1.png"))
+        self.assertTrue(urls[0].startswith(bbhub.SCREENSHOT_BASE))
+
+    def test_sans_dossier(self):
+        site = make_site(self.tmp, VALID)
+        self.assertEqual(bbhub.screenshot_urls(site, VALID), [])
+
+    def test_liste_explicite_prioritaire(self):
+        site = make_site(self.tmp, VALID)
+        (site / "screenshots").mkdir()
+        (site / "screenshots" / "1.png").write_text("x", encoding="utf-8")
+        m = dict(VALID, screenshots=["https://example.com/a.png"])
+        self.assertEqual(bbhub.screenshot_urls(site, m), ["https://example.com/a.png"])
+
+    def test_url_relative_rejetee(self):
+        m = dict(VALID, screenshots=["captures/1.png"])
+        site = make_site(self.tmp, m)
+        self.assertTrue(any("screenshots" in e for e in bbhub.validate(site, m)))
+
+    def test_generate_injecte_les_captures(self):
+        site = make_site(self.tmp, VALID)
+        (site / "screenshots").mkdir()
+        (site / "screenshots" / "1.png").write_text("x", encoding="utf-8")
+        out = bbhub.generate(site, self.tmp / "dist")
+        xml = (out / f"{VALID['id']}.metainfo.xml").read_text(encoding="utf-8")
+        self.assertIn('<screenshot type="default">', xml)
+        self.assertIn("screenshots/1.png", xml)
+
+
 class RuntimeJsonTests(unittest.TestCase):
     def test_sous_ensemble_runtime(self):
         m = dict(VALID, allowed_domains=["example.com"],

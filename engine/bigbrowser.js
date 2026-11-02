@@ -26,6 +26,19 @@ if (!GLib.getenv('GDK_BACKEND')) {
         GLib.setenv('GDK_BACKEND', 'x11', false);
 }
 
+// --- Contournement NVIDIA : renderer DMA-BUF de WebKitGTK défectueux sur le
+// pilote propriétaire (contenu figé au redimensionnement, textures blanches —
+// https://bugs.webkit.org/show_bug.cgi?id=262607). /proc/driver/nvidia est
+// global au noyau, donc visible aussi depuis le sandbox Flatpak. Faux positif
+// possible en multi-GPU si la session tourne sur l'autre carte : on perd alors
+// un peu d'accélération, mais rien ne casse. Exporter la variable soi-même
+// (même vide) garde la main : setenv n'écrase pas.
+if (GLib.getenv('WEBKIT_DISABLE_DMABUF_RENDERER') === null &&
+    GLib.file_test('/proc/driver/nvidia/version', GLib.FileTest.EXISTS)) {
+    GLib.setenv('WEBKIT_DISABLE_DMABUF_RENDERER', '1', false);
+    printerr('Big Browser: pilote NVIDIA détecté — renderer DMA-BUF WebKit désactivé.');
+}
+
 imports.gi.versions.Gdk = '4.0';
 imports.gi.versions.Gtk = '4.0';
 imports.gi.versions.WebKit = '6.0';
@@ -103,6 +116,12 @@ function domainMatches(host, allowed) {
     host = host.toLowerCase();
     allowed = allowed.toLowerCase();
     return host === allowed || host.endsWith('.' + allowed);
+}
+
+// Seules les URLs web ont un sens dans le navigateur système (jamais
+// about:blank, blob:, data:… — le portail n'a aucun handler pour elles).
+function isWebUri(uri) {
+    return /^https?:/i.test(uri || '');
 }
 
 function buildAllowedDomains(manifest) {
@@ -328,8 +347,12 @@ function main(argv) {
             return false; // laisse WebKit afficher sa page d'erreur
         });
 
-        // Politique de navigation : tout ce qui sort du périmètre part dans
-        // le navigateur système. Le Site reste cantonné à ses domaines.
+        // Politique de navigation. Confinement au périmètre du Site :
+        //  - un CLIC sur un lien hors domaine part dans le navigateur système ;
+        //  - redirections, formulaires et iframes (captcha, SSO, paiement…)
+        //    restent dans la WebView : les envoyer dehors casse ces flux ;
+        //  - pas de pop-up : les internes se chargent dans la même fenêtre,
+        //    les externes partent dehors, le reste (about:blank…) est refusé.
         webView.connect('decide-policy', (_v, decision, type) => {
             if (type !== WebKit.PolicyDecisionType.NAVIGATION_ACTION &&
                 type !== WebKit.PolicyDecisionType.NEW_WINDOW_ACTION)
@@ -341,14 +364,17 @@ function main(argv) {
             const internal = host && allowed.some(d => domainMatches(host, d));
 
             if (type === WebKit.PolicyDecisionType.NEW_WINDOW_ACTION) {
-                // Pas de pop-up : on ouvre dehors et on refuse la nouvelle fenêtre.
-                if (!internal)
+                if (internal)
+                    webView.load_uri(uri);
+                else if (isWebUri(uri))
                     openExternal(win, uri);
                 decision.ignore();
                 return true;
             }
 
-            if (!internal) {
+            if (!internal && isWebUri(uri) &&
+                action.get_navigation_type() === WebKit.NavigationType.LINK_CLICKED &&
+                !action.is_redirect()) {
                 openExternal(win, uri);
                 decision.ignore();
                 return true;

@@ -17,6 +17,7 @@ project_license: MIT
 # --- Métadonnées catalogue (AppStream) ---
 developer_name: Big Browser
 homepage: https://fr.wikipedia.org
+brand_color: '#3366cc'   # bleu Wikimédia
 categories: [Network, Education]
 keywords: [encyclopédie, wiki, référence]
 version: '1.0'
