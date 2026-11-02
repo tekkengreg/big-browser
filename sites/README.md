@@ -22,7 +22,8 @@ Le manifeste flatpak-builder, le `metainfo.xml`, le `.desktop` et le `site.json`
   dédupliquée par OSTree entre tous les Sites).
 - Il installe `site.json` dans `/app/share/<app-id>/site.json`.
 - `command: bigbrowser` lance l'Engine qui, via `$FLATPAK_ID`, trouve son `site.json` tout seul.
-- Le stockage du Site (cookies, etc.) est isolé par Flatpak dans `~/.var/app/<app-id>/`.
+- Le stockage du Site (cookies, préférences de langue et de thème, géométrie) est isolé par
+  Flatpak dans `~/.var/app/<app-id>/`.
 
 ## Builder & tester un Site
 

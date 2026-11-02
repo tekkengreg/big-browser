@@ -5,11 +5,11 @@ Moteur générique : lit un manifeste de **Site** (`site.json`) et l'affiche dan
 
 ## Dépendances (test local)
 
-Le moteur tourne sous `gjs` avec les *typelibs* GTK 4 et WebKitGTK 6.0.
+Le moteur tourne sous `gjs` avec les *typelibs* GTK 4, libadwaita 1 et WebKitGTK 6.0.
 
-- **Fedora** : `sudo dnf install gjs gtk4 webkitgtk6.0`
-- **Debian/Ubuntu** : `sudo apt install gjs gir1.2-gtk-4.0 gir1.2-webkit-6.0`
-- **Arch** : `sudo pacman -S gjs gtk4 webkitgtk-6.0`
+- **Fedora** : `sudo dnf install gjs gtk4 libadwaita webkitgtk6.0`
+- **Debian/Ubuntu** : `sudo apt install gjs gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-webkit-6.0`
+- **Arch** : `sudo pacman -S gjs gtk4 libadwaita webkitgtk-6.0`
 
 > En production, ces dépendances sont fournies par le runtime Flatpak `org.gnome.Platform` :
 > rien à installer côté utilisateur final.
@@ -31,11 +31,12 @@ BIGBROWSER_SITE=examples/excalidraw.site.json gjs engine/bigbrowser.js
 
 | Champ | Requis | Rôle |
 |-------|:------:|------|
-| `url` | ✅ | URL de la webapp à charger |
+| `url` | ✅ | URL de la webapp à charger. `{lang}` / `{locale}` y reçoivent la langue effective (cf. « Langue ») |
 | `id` | — | app-id (défaut : `com.tekkengreg.bigbrowser.UnnamedSite`) ; isole cookies/stockage |
 | `title` | — | titre de fenêtre (défaut : `id`) |
 | `icon` | — | nom de fichier icône (utilisé à l'empaquetage, pas au runtime) |
 | `allowed_domains` | — | domaines internes ; l'hôte de `url` est toujours ajouté. Hors liste → navigateur système |
+| `languages` | — | langues proposées au menu (BCP 47). Omis → liste intégrée (18 langues) |
 | `permissions.notifications` | — | autorise les notifications (défaut : refus) |
 | `permissions.geolocation` | — | autorise la géolocalisation (défaut : refus) |
 | `permissions.media` | — | autorise caméra/micro (défaut : refus) |
@@ -69,15 +70,56 @@ WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 \
 Cela ne concerne **que** l'environnement de dev : en Flatpak, l'utilisateur final a un trust
 store complet et un GPU natif, aucune de ces variables n'est nécessaire.
 
+## La fenêtre
+
+Une barre d'en-tête minimale, sans barre d'adresse : un Site n'est pas un navigateur.
+
+- **← Précédent** (à gauche) : recule dans l'historique de la WebView. Grisé tant qu'il n'y a
+  rien derrière. Aussi `Alt+←` et la touche « Précédent » du clavier/souris.
+- **☰ Menu** (à droite, `F10`) : **Langue** et **Thème**, en boutons radio.
+
+## Langue
+
+Un Site suit par défaut la langue du bureau : `GLib.get_language_names()` est traduit en
+étiquettes BCP 47 et posé sur la `WebKit.WebContext` (`Accept-Language`, `navigator.language`).
+Le menu permet de surcharger ce choix ; la surcharge est préfixée à la liste, la langue du
+système restant en repli.
+
+Le `site.yaml` n'a donc **jamais** à figer une langue. Pour une webapp dont l'URL encode la
+langue, on paramètre `url` :
+
+```yaml
+url: https://{lang}.wikipedia.org     # {lang} = fr, {locale} = fr-FR
+homepage: https://www.wikipedia.org   # requis : le gabarit n'est pas cliquable
+```
+
+À chaque changement de langue, l'URL d'accueil est recalculée ; si elle a changé d'hôte, le
+Site y retourne (et l'hôte résolu est ajouté aux domaines internes), sinon il recharge la page
+courante avec le nouvel `Accept-Language`.
+
+Le choix offert au menu vient de `languages` (sinon de la liste intégrée de l'Engine) : c'est
+une liste de codes, pas une restriction — la langue du système est toujours proposée en tête.
+
+## Thème
+
+`Système` (défaut), `Clair` ou `Sombre`. Le réglage passe par `Adw.StyleManager`, qui pilote
+d'un coup le thème GTK **et** le `prefers-color-scheme` vu par la page : une webapp qui sait
+faire du sombre suit la fenêtre. « Système » = le réglage du bureau, via le portail
+`org.freedesktop.appearance`.
+
 ## Comportements
 
 - **Isolation** : chaque Site a sa propre `NetworkSession` (cookies SQLite persistants) sous
   `~/.local/share/bigbrowser/<id>/`.
 - **Périmètre** : les liens hors `allowed_domains` (et toute tentative de pop-up) s'ouvrent dans
   le navigateur système via `Gtk.UriLauncher`.
-- **Titre dynamique** : `<titre de page> — <titre du Site>`.
-- **Raccourcis** : `Ctrl +/-/0` (zoom), `F5` ou `Ctrl+R` (recharger).
+- **Titre dynamique** : `<titre de page> — <titre du Site>` (titre de page en ligne 1 de la barre
+  d'en-tête, nom du Site en sous-titre).
+- **Raccourcis** : `Alt+←` (précédent), `Ctrl +/-/0` (zoom), `F5` ou `Ctrl+R` (recharger),
+  `F10` (menu).
 - **Géométrie** : taille de fenêtre persistée sous `~/.local/share/bigbrowser/<id>/window-state.json`.
+- **Préférences** : langue et thème persistés par Site sous
+  `~/.local/share/bigbrowser/<id>/prefs.json` (chaîne vide / `system` = suivre le bureau).
 - **Téléchargements** : enregistrés sans dialogue dans le dossier Téléchargements XDG
   (`~/Téléchargements`, repli `$HOME`) ; collisions de noms gérées (`fichier (1).ext`). En Flatpak,
   l'accès en écriture est fourni par le `finish-arg` `--filesystem=xdg-download:create` (ajouté

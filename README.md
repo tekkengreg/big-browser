@@ -9,6 +9,14 @@ Flatpak et distribué via le **Big Browser Hub**, hébergé sur GitHub Pages.
 
 > Feuille de route détaillée : [`ROADMAP.md`](ROADMAP.md).
 
+## Dans la fenêtre
+
+Pas de barre d'adresse : un Site n'est pas un navigateur. Juste une barre d'en-tête avec un
+bouton **Précédent** et un **menu** à deux réglages, **Langue** et **Thème**. Les deux suivent
+le système par défaut et se surchargent par Site — un Site n'est donc jamais dédié à une
+langue : Wikipédia s'ouvre dans l'édition du bureau, comme le ferait le site dans un
+navigateur. Détails : [`engine/README.md`](engine/README.md).
+
 ## Structure
 
 ```
@@ -112,6 +120,6 @@ catalogue apparaissent sur l'URL Pages.
 
 ## Dépendances de dev
 
-- Engine : `gjs`, `gtk4`, `webkitgtk6.0` (cf. [`engine/README.md`](engine/README.md)).
+- Engine : `gjs`, `gtk4`, `libadwaita`, `webkitgtk6.0` (cf. [`engine/README.md`](engine/README.md)).
 - Tooling : Python 3 + PyYAML.
 - Build : `flatpak`, `flatpak-builder`.

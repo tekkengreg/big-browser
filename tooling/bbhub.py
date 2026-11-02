@@ -29,9 +29,20 @@ import yaml
 DEFAULT_RUNTIME_VERSION = "49"
 ENGINE_REL = Path(__file__).resolve().parent.parent / "engine" / "bigbrowser.js"
 ID_RE = re.compile(r"^[A-Za-z][\w-]*(\.[A-Za-z][\w-]*)+$")
-RUNTIME_KEYS = ("id", "title", "url", "icon", "allowed_domains",
+# Étiquette de langue : sous-tag principal, éventuellement régionalisé (pt-BR).
+LANG_TAG_RE = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$")
+RUNTIME_KEYS = ("id", "title", "url", "icon", "allowed_domains", "languages",
                 "permissions", "inject_css", "inject_js", "ignore_tls_errors")
 REQUIRED = ("id", "title", "url", "icon", "summary", "description", "project_license")
+
+# --- URL paramétrée par la langue -----------------------------------------
+# L'Engine substitue `{lang}` (sous-tag principal : fr) et `{locale}`
+# (étiquette complète : fr-FR) dans `url` au lancement, d'après la langue du
+# système ou la surcharge choisie au menu. Un Site comme Wikipédia suit ainsi
+# la langue du bureau (https://{lang}.wikipedia.org) au lieu d'être figé sur
+# une édition. Le gabarit n'étant pas une URL valide, `homepage` devient requis
+# pour que le metainfo garde un lien « Page d'accueil » cliquable.
+URL_PLACEHOLDER_RE = re.compile(r"\{(?:lang|locale)\}")
 
 # --- Liens du store (Big Browser Hub) -------------------------------------
 # Un Site n'est pas publié par l'éditeur de la webapp : son « projet », au sens
@@ -136,6 +147,20 @@ def validate(site_dir: Path, manifest: dict) -> list[str]:
     url = manifest.get("url", "")
     if url and not url.startswith("https://"):
         errors.append(f"url '{url}' : doit être en https://")
+    if url and URL_PLACEHOLDER_RE.search(url) and not manifest.get("homepage"):
+        errors.append(f"url '{url}' est paramétrée par la langue : "
+                      "renseignez 'homepage' (lien du catalogue)")
+
+    langs = manifest.get("languages")
+    if langs is not None:
+        if not isinstance(langs, list) or not langs:
+            errors.append("languages : doit être une liste non vide de codes "
+                          "BCP 47 (ex. [fr, en, de])")
+        else:
+            for code in langs:
+                if not isinstance(code, str) or not LANG_TAG_RE.match(code):
+                    errors.append(f"languages : '{code}' n'est pas un code BCP 47 "
+                                  "(ex. fr, en, pt-BR)")
 
     icon = manifest.get("icon")
     if icon:

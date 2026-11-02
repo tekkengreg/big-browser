@@ -4,19 +4,24 @@
 # --- Requis ---
 id: com.tekkengreg.bigbrowser.Wikipedia
 title: Wikipédia
-url: https://fr.wikipedia.org
+# `{lang}` reçoit la langue effective (celle du système par défaut, ou la
+# surcharge choisie dans le menu) : le Site ouvre l'édition correspondante.
+url: https://{lang}.wikipedia.org
 icon: icon.svg
 icon_source: https://upload.wikimedia.org/wikipedia/commons/6/63/Wikipedia-logo.png
 summary: L'encyclopédie libre, en application autonome
 description: |
-  Wikipédia encapsulée par Big Browser : la version française de l'encyclopédie
-  libre, dans sa propre fenêtre, avec son icône, son stockage isolé et sa place
-  dans le menu — comme une application native plutôt qu'un onglet de navigateur.
+  Wikipédia encapsulée par Big Browser : l'encyclopédie libre dans sa propre
+  fenêtre, avec son icône, son stockage isolé et sa place dans le menu — comme
+  une application native plutôt qu'un onglet de navigateur.
+
+  L'édition ouverte suit la langue du système ; le menu de la fenêtre permet
+  d'en choisir une autre.
 project_license: MIT
 
 # --- Métadonnées catalogue (AppStream) ---
 developer_name: Big Browser
-homepage: https://fr.wikipedia.org
+homepage: https://www.wikipedia.org
 brand_color: '#3366cc'   # bleu Wikimédia
 categories: [Network, Education]
 keywords: [encyclopédie, wiki, référence]

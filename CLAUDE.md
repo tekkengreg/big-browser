@@ -27,9 +27,11 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
                                                  └ bigbrowser.js      (Engine copié, dédupliqué par OSTree)
 ```
 
-- **`engine/bigbrowser.js`** — Moteur générique unique (`gjs`). Lit un `site.json` et l'affiche
-  dans une WebView. Le **même Engine est copié dans chaque Site** au moment de `generate` ; OSTree
-  le dédoublonne entre tous les Sites au build. Toute évolution du comportement runtime se fait ici.
+- **`engine/bigbrowser.js`** — Moteur générique unique (`gjs`, GTK4 / libadwaita / WebKit 6.0).
+  Lit un `site.json` et l'affiche dans une WebView surmontée d'une barre d'en-tête minimale
+  (bouton Précédent + menu Langue/Thème). Le **même Engine est copié dans chaque Site** au moment
+  de `generate` ; OSTree le dédoublonne entre tous les Sites au build. Toute évolution du
+  comportement runtime se fait ici.
 - **`tooling/bbhub.py`** — Dérive les artefacts Flatpak depuis `site.yaml`. C'est lui qui contient
   la logique de mapping permissions → `finish-args` (`media` → `--device=all --socket=pulseaudio`,
   `notifications` → `--talk-name=org.freedesktop.Notifications`) et qui produit le `site.json`
@@ -66,6 +68,11 @@ sites/<id>/icon.svg                              ├ <id>.yml          (manifest
   SSO…) restent dans la WebView. Pas de pop-up : les internes se chargent dans la même fenêtre,
   les externes `http(s)` partent dehors, le reste (`about:blank`…) est refusé silencieusement.
 - Permissions refusées par défaut (notifications / geolocation / media).
+- **Un Site ne fige jamais une langue ni un thème** : les deux suivent le système par défaut et
+  se surchargent depuis le menu de la fenêtre (persisté dans `prefs.json`, par Site). Une webapp
+  dont l'URL encode la langue se déclare avec un gabarit — `url: https://{lang}.wikipedia.org`,
+  `{lang}` = `fr`, `{locale}` = `fr-FR` — auquel cas `homepage` devient requis (le gabarit n'est
+  pas un lien cliquable pour le catalogue).
 
 ## Commandes
 
@@ -76,7 +83,8 @@ gjs engine/bigbrowser.js examples/wikipedia.site.json          # via argument
 BIGBROWSER_SITE=examples/excalidraw.site.json gjs engine/bigbrowser.js
 ```
 
-Dépendances hôte : `gjs gtk4 webkitgtk6.0` (Fedora : `sudo dnf install gjs gtk4 webkitgtk6.0`).
+Dépendances hôte : `gjs gtk4 libadwaita webkitgtk6.0`
+(Fedora : `sudo dnf install gjs gtk4 libadwaita webkitgtk6.0`).
 
 Si **« Unacceptable TLS certificate » / `UNKNOWN_CA`** sur un site valide → `glib-networking`
 manquant. Cas Fedora **toolbox** (trust store vide) — pointer GnuTLS sur le bundle hôte et

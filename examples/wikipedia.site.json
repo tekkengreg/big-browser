@@ -1,7 +1,7 @@
 {
   "id": "com.tekkengreg.bigbrowser.Wikipedia",
   "title": "Wikipédia",
-  "url": "https://fr.wikipedia.org",
+  "url": "https://{lang}.wikipedia.org",
   "icon": "icon.svg",
   "allowed_domains": ["wikipedia.org", "wikimedia.org"],
   "permissions": {
